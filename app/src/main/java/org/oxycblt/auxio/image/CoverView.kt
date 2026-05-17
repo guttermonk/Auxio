@@ -36,6 +36,7 @@ import androidx.annotation.AttrRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.Px
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.net.toUri
 import androidx.core.view.children
 import androidx.core.view.doOnLayout
 import androidx.core.view.isEmpty
@@ -44,6 +45,7 @@ import androidx.core.widget.ImageViewCompat
 import androidx.dynamicanimation.animation.SpringAnimation
 import coil3.ImageLoader
 import coil3.asImage
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.target
 import coil3.request.transformations
@@ -52,18 +54,16 @@ import com.google.android.material.R as MR
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.RelativeCornerSize
 import com.google.android.material.shape.ShapeAppearanceModel
-import androidx.core.net.toUri
-import coil3.request.CachePolicy
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.min
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.image.coil.GalleryCoverCollection
-import org.oxycblt.auxio.image.covers.CustomCoverStore
 import org.oxycblt.auxio.image.coil.RoundedRectTransformation
 import org.oxycblt.auxio.image.coil.SmatteringCoverComposition
 import org.oxycblt.auxio.image.coil.SquareCropTransformation
 import org.oxycblt.auxio.image.coil.StackCoverComposition
+import org.oxycblt.auxio.image.covers.CustomCoverStore
 import org.oxycblt.auxio.ui.Effect
 import org.oxycblt.auxio.ui.Spatial
 import org.oxycblt.auxio.ui.UISettings

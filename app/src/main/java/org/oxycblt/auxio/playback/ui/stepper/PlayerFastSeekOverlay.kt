@@ -31,10 +31,10 @@ import androidx.dynamicanimation.animation.SpringAnimation
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.ui.Effect
 import org.oxycblt.auxio.ui.UISettings
-import javax.inject.Inject
 
 enum class Direction {
     FORWARDS,

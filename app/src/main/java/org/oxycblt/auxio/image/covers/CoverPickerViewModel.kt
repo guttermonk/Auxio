@@ -28,8 +28,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicRepository
-import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.auxio.util.Event
+import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Music
 import timber.log.Timber as L
@@ -150,22 +150,25 @@ constructor(
                 }
             }
 
-            add(CoverPickerItem.ActionItem(
-                R.drawable.ic_file_24,
-                R.string.lbl_browse_device,
-                CoverPickerItem.ACTION_BROWSE,
-            ))
-            add(CoverPickerItem.ActionItem(
-                R.drawable.ic_search_24,
-                R.string.lbl_search_online,
-                CoverPickerItem.ACTION_SEARCH,
-            ))
-            if (customCoverStore.has(album.uid)) {
-                add(CoverPickerItem.ActionItem(
-                    R.drawable.ic_close_24,
-                    R.string.lbl_reset_cover,
-                    CoverPickerItem.ACTION_RESET,
+            add(
+                CoverPickerItem.ActionItem(
+                    R.drawable.ic_file_24,
+                    R.string.lbl_browse_device,
+                    CoverPickerItem.ACTION_BROWSE,
                 ))
+            add(
+                CoverPickerItem.ActionItem(
+                    R.drawable.ic_search_24,
+                    R.string.lbl_search_online,
+                    CoverPickerItem.ACTION_SEARCH,
+                ))
+            if (customCoverStore.has(album.uid)) {
+                add(
+                    CoverPickerItem.ActionItem(
+                        R.drawable.ic_close_24,
+                        R.string.lbl_reset_cover,
+                        CoverPickerItem.ACTION_RESET,
+                    ))
             }
         }
 }

@@ -22,6 +22,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -135,9 +136,7 @@ class CoverPickerDialogFragment :
     }
 
     private fun launchGalleryPicker() {
-        galleryPicker.launch(
-            ActivityResultContracts.PickVisualMedia.ImageOnly
-        )
+        galleryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
     private fun launchOnlineSearch() {
