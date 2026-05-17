@@ -138,7 +138,11 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
     override fun onSingleTapConfirmed(e: MotionEvent) = false
 
 
-    private fun enter(secondsView: SecondsView, tapView: TapView, overlayState: (OverlayState) -> Unit) {
+    private fun enter(
+        secondsView: SecondsView,
+        tapView: TapView,
+        overlayState: (OverlayState) -> Unit,
+    ) {
         // start animating the seconds icon
         secondsView.startAnimation()
         val secondsIn = alphaSpring.alpha(secondsView, 1.0f)
@@ -156,7 +160,11 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
         overlayState(OverlayState.Entering(secondsIn, tapIn))
     }
 
-    private fun exit(secondsView: SecondsView, tapView: TapView, overlayState: (OverlayState) -> Unit) {
+    private fun exit(
+        secondsView: SecondsView,
+        tapView: TapView,
+        overlayState: (OverlayState) -> Unit,
+    ) {
         val secondsOut = alphaSpring.alpha(secondsView, 0.0f)
         val tapOut = alphaSpring.alpha(tapView, 0.0f)
         tapOut.addEndListener { _, cancelled, _, _ ->

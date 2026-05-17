@@ -414,7 +414,8 @@ constructor(
         if (withCache && currentRevision != null) {
             L.d("Phase 1: instant library load from cache")
             val phase1Start = System.currentTimeMillis()
-            val phase1Config = config.copy(storage = storage.copy(cache = StaleAsHitCache(baseCache)))
+            val phase1Config =
+                config.copy(storage = storage.copy(cache = StaleAsHitCache(baseCache)))
             val phase1Result = Musikr.new(context, phase1Config).run()
             L.d("Phase 1 finished in ${System.currentTimeMillis() - phase1Start}ms")
             emitLibrary(phase1Result.library)

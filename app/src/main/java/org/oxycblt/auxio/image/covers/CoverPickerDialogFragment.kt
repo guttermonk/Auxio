@@ -51,8 +51,7 @@ import timber.log.Timber as L
  */
 @AndroidEntryPoint
 class CoverPickerDialogFragment :
-    ViewBindingBottomSheetDialogFragment<DialogCoverPickerBinding>(),
-    CoverPickerListener {
+    ViewBindingBottomSheetDialogFragment<DialogCoverPickerBinding>(), CoverPickerListener {
 
     @Inject lateinit var imageLoader: ImageLoader
 
@@ -137,7 +136,8 @@ class CoverPickerDialogFragment :
 
     private fun launchGalleryPicker() {
         galleryPicker.launch(
-            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
     }
 
     private fun launchOnlineSearch() {

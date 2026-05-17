@@ -71,6 +71,7 @@ sealed interface CoverPickerItem {
 /** Callbacks from the cover picker RecyclerView to the fragment. */
 interface CoverPickerListener {
     fun onCoverSelected(item: CoverPickerItem.CoverOption)
+
     fun onActionSelected(item: CoverPickerItem.ActionItem)
 }
 
@@ -110,7 +111,8 @@ class CoverPickerAdapter(
         return when (viewType) {
             VIEW_TYPE_SECTION ->
                 SectionViewHolder(
-                    inflater.inflate(org.oxycblt.auxio.R.layout.item_header, parent, false))
+                    inflater.inflate(org.oxycblt.auxio.R.layout.item_header, parent, false)
+                )
             VIEW_TYPE_THUMBNAIL ->
                 ThumbnailViewHolder(ItemCoverThumbnailBinding.inflate(inflater, parent, false))
             VIEW_TYPE_ACTION ->
@@ -195,7 +197,11 @@ private class ActionViewHolder(private val binding: ItemMenuOptionBinding) :
             setText(item.titleRes)
             isEnabled = true
             setCompoundDrawablesRelativeWithIntrinsicBounds(
-                context.getDrawableCompat(item.iconRes), null, null, null)
+                context.getDrawableCompat(item.iconRes),
+                null,
+                null,
+                null,
+            )
         }
     }
 }
