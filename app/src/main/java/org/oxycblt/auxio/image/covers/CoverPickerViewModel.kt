@@ -60,8 +60,8 @@ constructor(
 
     private val _saveResult = MutableEvent<Boolean>()
     /**
-     * Fires with `true` on successful save/reset, `false` on failure. The fragment should show
-     * the appropriate toast and then dismiss.
+     * Fires with `true` on successful save/reset, `false` on failure. The fragment should show the
+     * appropriate toast and then dismiss.
      */
     val saveResult: Event<Boolean> = _saveResult
 
@@ -96,8 +96,8 @@ constructor(
     }
 
     /**
-     * Persist the image at [uri] as the custom cover for the current album.
-     * Emits the result via [saveResult].
+     * Persist the image at [uri] as the custom cover for the current album. Emits the result via
+     * [saveResult].
      */
     fun saveCover(uri: Uri) {
         val album = _currentAlbum.value ?: return
@@ -112,8 +112,8 @@ constructor(
     }
 
     /**
-     * Persist a library [Cover] (by its byte data) as the custom cover for the current album.
-     * The Cover's stream is copied into internal storage so it survives library rescans.
+     * Persist a library [Cover] (by its byte data) as the custom cover for the current album. The
+     * Cover's stream is copied into internal storage so it survives library rescans.
      */
     fun saveCoverFromLibrary(item: CoverPickerItem.CoverOption) {
         val album = _currentAlbum.value ?: return

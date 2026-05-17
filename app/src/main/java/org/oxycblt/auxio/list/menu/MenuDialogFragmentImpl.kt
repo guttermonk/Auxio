@@ -120,8 +120,8 @@ class AlbumMenuDialogFragment : MenuDialogFragment<Menu.ForAlbum>() {
     }
 
     /**
-     * Navigate directly to the cover picker without first dismissing this dialog so that the
-     * cover picker slides in on top and the back stack lands back at the correct destination.
+     * Navigate directly to the cover picker without first dismissing this dialog so that the cover
+     * picker slides in on top and the back stack lands back at the correct destination.
      */
     override fun interceptClick(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_change_cover) {

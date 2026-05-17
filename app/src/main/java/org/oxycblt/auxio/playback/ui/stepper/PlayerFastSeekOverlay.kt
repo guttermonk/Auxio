@@ -63,7 +63,6 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
 
     private val alphaSpring = Effect.FAST
 
-
     private var leftOverlayState: OverlayState = OverlayState.Invisible
     private var rightOverlayState: OverlayState = OverlayState.Invisible
 
@@ -79,17 +78,17 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
             val shapeAppearanceRes =
                 getResourceId(
                     R.styleable.PlayerFastSeekOverlay_shapeAppearance,
-                    com.google.android.material.R.style
-                        .ShapeAppearance_Material3_Corner_Medium
+                    com.google.android.material.R.style.ShapeAppearance_Material3_Corner_Medium,
                 )
 
             background =
                 MaterialShapeDrawable().apply {
-                    shapeAppearanceModel = if (uiSettings.roundMode) {
-                        ShapeAppearanceModel.builder(context, shapeAppearanceRes, -1).build()
-            } else {
-                ShapeAppearanceModel.builder().build()
-                    }
+                    shapeAppearanceModel =
+                        if (uiSettings.roundMode) {
+                            ShapeAppearanceModel.builder(context, shapeAppearanceRes, -1).build()
+                        } else {
+                            ShapeAppearanceModel.builder().build()
+                        }
                     // Set transparent background as we only want the clipping
                     fillColor = ColorStateList.valueOf(Color.TRANSPARENT)
                 }
@@ -131,12 +130,10 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
         rightTapView.setDirection(Direction.FORWARDS) // isLeft = false for right side
     }
 
-
     override fun onTouchEvent(event: MotionEvent): Boolean =
         gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
 
     override fun onSingleTapConfirmed(e: MotionEvent) = false
-
 
     private fun enter(
         secondsView: SecondsView,
@@ -265,7 +262,7 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
                     rightSecondsView,
                     rightTapView,
                     rightOverlayState,
-                    { rightOverlayState = it }
+                    { rightOverlayState = it },
                 )
             }
 

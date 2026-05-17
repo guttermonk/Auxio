@@ -27,8 +27,8 @@ import org.oxycblt.musikr.fs.File
  * A [MutableCache] shim that promotes stale cache entries to hits.
  *
  * Used during the fast phase-1 pass so that previously-cached metadata is served immediately
- * without waiting for TagLib re-extraction of modified files. Phase 2 then runs with the real
- * cache to re-extract only the files that were stale, keeping the library accurate.
+ * without waiting for TagLib re-extraction of modified files. Phase 2 then runs with the real cache
+ * to re-extract only the files that were stale, keeping the library accurate.
  *
  * Files with no cache entry at all ([CacheResult.Miss]) still go through extraction so that
  * brand-new tracks are included in the phase-1 library.

@@ -310,7 +310,8 @@ class WidgetProvider : AppWidgetProvider() {
             setContentDescription(
                 R.id.widget_cover,
                 context.getString(
-                    R.string.desc_album_cover, state.song.album.name.resolve(context)
+                    R.string.desc_album_cover,
+                    state.song.album.name.resolve(context),
                 ),
             )
         } else {

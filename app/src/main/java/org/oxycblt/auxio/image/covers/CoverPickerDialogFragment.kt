@@ -161,10 +161,11 @@ class CoverPickerDialogFragment :
         if (success == null) return
         pickerModel.saveResult.consume()
         if (success) {
-            requireContext().showToast(
-                if (pickerModel.hasCustomCover.value) R.string.lng_cover_saved
-                else R.string.lng_cover_reset
-            )
+            requireContext()
+                .showToast(
+                    if (pickerModel.hasCustomCover.value) R.string.lng_cover_saved
+                    else R.string.lng_cover_reset
+                )
             // Pop both the cover picker and the album menu dialog so the user lands back
             // at the album detail (or wherever they opened the menu from).
             if (!findNavController().popBackStack(R.id.album_menu_dialog, true)) {
