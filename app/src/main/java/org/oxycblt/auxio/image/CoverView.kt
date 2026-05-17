@@ -53,7 +53,7 @@ import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.RelativeCornerSize
 import com.google.android.material.shape.ShapeAppearanceModel
 import androidx.core.net.toUri
-import coil3.request.memoryCachePolicy
+import coil3.request.CachePolicy
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.min
@@ -536,7 +536,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
                 .error(
                     StyledDrawable(context, context.getDrawableCompat(errorRes), iconSize).asImage()
                 )
-                .apply { if (disableMemoryCache) memoryCachePolicy(coil3.request.CachePolicy.DISABLED) }
+                .apply { if (disableMemoryCache) memoryCachePolicy(CachePolicy.DISABLED) }
                 .target(image)
 
         val bounds = RectF(0f, 0f, size.width.toFloat(), size.height.toFloat())

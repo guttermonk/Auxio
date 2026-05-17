@@ -30,6 +30,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil3.ImageLoader
 import coil3.request.ImageRequest
+import coil3.request.target
 import coil3.request.transformations
 import org.oxycblt.auxio.databinding.ItemCoverThumbnailBinding
 import org.oxycblt.auxio.databinding.ItemMenuOptionBinding

@@ -43,6 +43,7 @@ import org.oxycblt.auxio.music.IndexingState
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMsPopup
+import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Music
@@ -100,7 +101,7 @@ class AlbumListFragment :
         )
         // When the user saves or resets a custom cover, rebind that specific list item so
         // the thumbnail updates immediately without requiring a full dataset reload.
-        collect(customCoverStore.updates) { changedUid ->
+        collect(customCoverStore.updates) { changedUid: Music.UID ->
             val pos = homeModel.albumList.value.indexOfFirst { it.uid == changedUid }
             if (pos != -1) albumAdapter.notifyItemChanged(pos)
         }
