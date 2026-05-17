@@ -124,11 +124,12 @@ class SecondsView(context: Context, attrs: AttributeSet?) : LinearLayout(context
         val one = alphaSpring.alpha(binding.icon1, cyclicAlpha[row])
         val two = alphaSpring.alpha(binding.icon2, cyclicAlpha[row + 1])
         val three = alphaSpring.alpha(binding.icon3, cyclicAlpha[row + 2])
-        val endListener = DynamicAnimation.OnAnimationEndListener { _, cancelled, _, _ ->
-            if (!cancelled) {
-                cycle((at + 1) % 5)
+        val endListener =
+            DynamicAnimation.OnAnimationEndListener { _, cancelled, _, _ ->
+                if (!cancelled) {
+                    cycle((at + 1) % 5)
+                }
             }
-        }
         when {
             cyclicAlpha[row] != binding.icon1.alpha -> {
                 one.addEndListener(endListener)

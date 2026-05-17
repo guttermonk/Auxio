@@ -127,7 +127,7 @@ class AlbumMenuDialogFragment : MenuDialogFragment<Menu.ForAlbum>() {
         if (item.itemId == R.id.action_change_cover) {
             val album = (menuModel.currentMenu.value as? Menu.ForAlbum)?.album ?: return false
             findNavController().navigate(
-                AlbumMenuDialogFragmentDirections.openCoverPicker(album.uid)
+                AlbumMenuDialogFragmentDirections.openCoverPicker(album.uid),
             )
             return true
         }

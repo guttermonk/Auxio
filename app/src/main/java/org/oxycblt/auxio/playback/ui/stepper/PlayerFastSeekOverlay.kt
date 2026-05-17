@@ -38,7 +38,7 @@ import org.oxycblt.auxio.ui.UISettings
 
 enum class Direction {
     FORWARDS,
-    BACKWARDS
+    BACKWARDS,
 }
 
 @AndroidEntryPoint
