@@ -30,6 +30,7 @@ import kotlinx.coroutines.yield
 import org.oxycblt.auxio.image.covers.SettingCovers
 import org.oxycblt.auxio.music.MusicRepository.IndexingWorker
 import org.oxycblt.auxio.music.locations.LocationMode
+import org.oxycblt.auxio.music.shim.StaleAsHitCache
 import org.oxycblt.auxio.music.shim.WriteOnlyMutableCache
 import org.oxycblt.musikr.Config
 import org.oxycblt.musikr.IndexingProgress
@@ -381,7 +382,6 @@ constructor(
 
     private suspend fun indexImpl(withCache: Boolean) {
         L.d("Index requested, initializing")
-        // Obtain configuration information
         val separators = Separators.from(musicSettings.separators)
         L.d("Separators: $separators")
         val nameFactory =
@@ -394,8 +394,8 @@ constructor(
         val currentRevision = musicSettings.revision
         val newRevision = currentRevision?.takeIf { withCache } ?: UUID.randomUUID()
         L.d("Revisions: cur=$currentRevision, new=$newRevision")
-        val cache = if (withCache) cache else WriteOnlyMutableCache(cache)
-        L.d("Cache: $cache")
+        val baseCache = if (withCache) cache else WriteOnlyMutableCache(cache)
+        L.d("Cache: $baseCache")
         val covers = settingCovers.mutate(context, newRevision)
         L.d("Covers: $covers")
         val fs =
@@ -404,26 +404,35 @@ constructor(
                 LocationMode.MEDIA_STORE -> MediaStore.from(context, musicSettings.mediaStoreQuery)
             }
         L.d("FS: $fs")
-        val storage = Storage(cache, covers, storedPlaylists)
+        val storage = Storage(baseCache, covers, storedPlaylists)
         val interpretation = Interpretation(nameFactory, separators)
         val config = Config(fs, storage, interpretation)
-        L.d("Running index...")
+
+        // Phase 1: if a prior completed scan exists, serve the library immediately from the
+        // cache — treating stale entries as hits — so the user can browse while phase 2
+        // re-extracts changed files in the background.
+        if (withCache && currentRevision != null) {
+            L.d("Phase 1: instant library load from cache")
+            val phase1Start = System.currentTimeMillis()
+            val phase1Config = config.copy(storage = storage.copy(cache = StaleAsHitCache(baseCache)))
+            val phase1Result = Musikr.new(context, phase1Config).run()
+            L.d("Phase 1 finished in ${System.currentTimeMillis() - phase1Start}ms")
+            emitLibrary(phase1Result.library)
+            // Do not update revision or cleanup yet — phase 2 still needs the stale entries.
+        }
+
+        // Phase 2 (or sole run on first install / forced rescan): full extraction via TagLib
+        // for any stale or new files. Emits progress so the UI can show a loading indicator.
+        L.d("Phase 2: full index")
         val start = System.currentTimeMillis()
         val result = Musikr.new(context, config).run(::emitIndexingProgress)
-        L.d("Index finished in ${System.currentTimeMillis() - start}ms")
-        // Music loading completed, update the revision right now so we re-use this work
-        // later.
+        L.d("Phase 2 finished in ${System.currentTimeMillis() - start}ms")
         L.d("Revisioning from $currentRevision -> $newRevision")
         musicSettings.revision = newRevision
-        // Deliver the library to the rest of the app
-        // This will more or less block until all required item translation and
-        // cleanup finishes.
-        L.d("Emitting new library")
+        L.d("Emitting library")
         emitLibrary(result.library)
-        // Clean up old data that is now impossible for the app to be using.
         L.d("Cleanup")
         result.cleanup()
-        // Finish up loading.
         L.d("Indexing complete")
         emitIndexingCompletion(null)
     }

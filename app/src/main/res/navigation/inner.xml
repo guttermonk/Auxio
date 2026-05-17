@@ -526,6 +526,19 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForAlbum$Parcel" />
+        <action
+            android:id="@+id/open_cover_picker"
+            app:destination="@id/cover_picker_dialog" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/cover_picker_dialog"
+        android:name="org.oxycblt.auxio.image.covers.CoverPickerDialogFragment"
+        android:label="cover_picker_dialog"
+        tools:layout="@layout/dialog_cover_picker">
+        <argument
+            android:name="albumUid"
+            app:argType="org.oxycblt.musikr.Music$UID" />
     </dialog>
 
     <dialog

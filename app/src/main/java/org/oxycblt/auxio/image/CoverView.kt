@@ -52,11 +52,14 @@ import com.google.android.material.R as MR
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.RelativeCornerSize
 import com.google.android.material.shape.ShapeAppearanceModel
+import androidx.core.net.toUri
+import coil3.request.memoryCachePolicy
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.min
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.image.coil.GalleryCoverCollection
+import org.oxycblt.auxio.image.covers.CustomCoverStore
 import org.oxycblt.auxio.image.coil.RoundedRectTransformation
 import org.oxycblt.auxio.image.coil.SmatteringCoverComposition
 import org.oxycblt.auxio.image.coil.SquareCropTransformation
@@ -92,6 +95,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
     @Inject lateinit var imageLoader: ImageLoader
     @Inject lateinit var uiSettings: UISettings
     @Inject lateinit var imageSettings: ImageSettings
+    @Inject lateinit var customCoverStore: CustomCoverStore
 
     private val image: ImageView
 
@@ -356,25 +360,40 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
     /**
      * Bind an [Album]'s image to this view.
      *
+     * If the user has previously saved a custom cover for this album via [CoverPickerDialogFragment],
+     * that image is used instead of the library-derived artwork. Memory caching is disabled for
+     * custom covers so that a newly-saved image is always shown without stale data.
+     *
      * @param album The [Album] to bind to the view.
      */
     fun bind(album: Album) {
-        bindImpl(
-            {
-                // Generally it's not desirable for many albums to show all of their covers since
-                // unlike artists/genres they don't really change. Therefore just pick the most
-                // "prominent" cover (the one with the most instances) and load that like you
-                // would a song instead.
-                album.covers.covers
-                    .groupBy { it.id }
-                    .maxByOrNull { it.value.size }
-                    ?.value
-                    ?.firstOrNull()
-            },
-            context.getString(R.string.desc_album_cover, album.name),
-            R.drawable.ic_album_24,
-            squareishShapeAppearance,
-        )
+        val customFile = customCoverStore.fileFor(album.uid)
+        if (customFile.exists()) {
+            bindImpl(
+                { customFile.toUri() },
+                context.getString(R.string.desc_album_cover, album.name),
+                R.drawable.ic_album_24,
+                squareishShapeAppearance,
+                disableMemoryCache = true,
+            )
+        } else {
+            bindImpl(
+                {
+                    // Generally it's not desirable for many albums to show all of their covers since
+                    // unlike artists/genres they don't really change. Therefore just pick the most
+                    // "prominent" cover (the one with the most instances) and load that like you
+                    // would a song instead.
+                    album.covers.covers
+                        .groupBy { it.id }
+                        .maxByOrNull { it.value.size }
+                        ?.value
+                        ?.firstOrNull()
+                },
+                context.getString(R.string.desc_album_cover, album.name),
+                R.drawable.ic_album_24,
+                squareishShapeAppearance,
+            )
+        }
     }
 
     /**
@@ -478,11 +497,12 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         desc: String,
         @DrawableRes errorRes: Int,
         shapeAppearanceModel: ShapeAppearanceModel,
+        disableMemoryCache: Boolean = false,
     ) {
         // prep proper shape to use if necessary. be safe and do it now
         // idk if doing it at layout time will cause issues
         updateShapeAppearance(shapeAppearanceModel)
-        bindWait(img, desc, errorRes, shapeAppearanceModel)
+        bindWait(img, desc, errorRes, shapeAppearanceModel, disableMemoryCache)
     }
 
     private fun bindWait(
@@ -490,14 +510,15 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         desc: String,
         @DrawableRes errorRes: Int,
         shapeAppearanceModel: ShapeAppearanceModel,
+        disableMemoryCache: Boolean = false,
     ) {
         // for some reason randomly corner radii started breaking on menus
         // fix this by waiting until we are laid out instead
         val size = resolveSize()
         if (size != null) {
-            bindSized(img, desc, errorRes, size, shapeAppearanceModel)
+            bindSized(img, desc, errorRes, size, shapeAppearanceModel, disableMemoryCache)
         } else {
-            doOnLayout { bindImpl(img, desc, errorRes, shapeAppearanceModel) }
+            doOnLayout { bindImpl(img, desc, errorRes, shapeAppearanceModel, disableMemoryCache) }
         }
     }
 
@@ -507,6 +528,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         @DrawableRes errorRes: Int,
         size: Size,
         shapeAppearanceModel: ShapeAppearanceModel,
+        disableMemoryCache: Boolean = false,
     ) {
         val request =
             ImageRequest.Builder(context)
@@ -514,6 +536,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
                 .error(
                     StyledDrawable(context, context.getDrawableCompat(errorRes), iconSize).asImage()
                 )
+                .apply { if (disableMemoryCache) memoryCachePolicy(coil3.request.CachePolicy.DISABLED) }
                 .target(image)
 
         val bounds = RectF(0f, 0f, size.width.toFloat(), size.height.toFloat())

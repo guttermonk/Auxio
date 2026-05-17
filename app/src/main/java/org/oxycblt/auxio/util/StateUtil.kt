@@ -23,6 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -76,6 +77,18 @@ class MutableEvent<T> : Event<T> {
  */
 fun <T> Fragment.collect(stateFlow: StateFlow<T>, block: (T) -> Unit) {
     launch { stateFlow.collect(block) }
+}
+
+/**
+ * Collect a hot [Flow] (e.g. a [kotlinx.coroutines.flow.SharedFlow]) in a lifecycle-aware manner.
+ * Unlike [collect] for [StateFlow], this does not emit an immediate initial value — it only reacts
+ * to emissions that occur after collection begins.
+ *
+ * @param flow The [Flow] to collect.
+ * @param block The code to run on each emission.
+ */
+fun <T> Fragment.collect(flow: Flow<T>, block: (T) -> Unit) {
+    launch { flow.collect { block(it) } }
 }
 
 /**

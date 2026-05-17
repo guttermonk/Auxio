@@ -26,7 +26,7 @@ import org.oxycblt.musikr.fs.File
 class WriteOnlyMutableCache(private val inner: MutableCache) : MutableCache {
     override suspend fun read(file: File): CacheResult {
         return when (val result = inner.read(file)) {
-            is CacheResult.Hit -> CacheResult.Stale(file, result.file.addedMs)
+            is CacheResult.Hit -> CacheResult.Stale(result.file)
             else -> result
         }
     }

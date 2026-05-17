@@ -157,6 +157,8 @@ private class ExtractStepImpl(
         CachedFile(file, audio = Audio(properties, tags, cover?.id), addedMs)
 
     private companion object {
-        const val PARALLELISM = 8
+        // Scale with available CPUs: TagLib extraction is I/O-bound (file descriptor reads)
+        // so more threads than cores improves throughput. Clamp to [8, 16].
+        val PARALLELISM = (Runtime.getRuntime().availableProcessors() * 2).coerceIn(8, 16)
     }
 }

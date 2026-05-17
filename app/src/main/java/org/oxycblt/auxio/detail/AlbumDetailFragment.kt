@@ -24,9 +24,11 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentDetailBinding
 import org.oxycblt.auxio.detail.list.AlbumDetailListAdapter
+import org.oxycblt.auxio.image.covers.CustomCoverStore
 import org.oxycblt.auxio.list.Item
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.menu.Menu
@@ -59,6 +61,8 @@ class AlbumDetailFragment : DetailFragment<Album, Song>() {
     private val args: AlbumDetailFragmentArgs by navArgs()
     private val albumListAdapter = AlbumDetailListAdapter(this)
 
+    @Inject lateinit var customCoverStore: CustomCoverStore
+
     override fun getDetailListAdapter() = albumListAdapter
 
     override fun getToolbarParent() = detailModel.currentAlbum.value
@@ -83,6 +87,13 @@ class AlbumDetailFragment : DetailFragment<Album, Song>() {
             ::updatePlayback,
         )
         collect(playbackModel.playbackDecision.flow, ::handlePlaybackDecision)
+        // Rebind the album cover whenever the user saves or resets a custom cover.
+        collect(customCoverStore.updates) { changedUid ->
+            val album = detailModel.currentAlbum.value ?: return@collect
+            if (album.uid == changedUid) {
+                requireBinding().detailCover.bind(album)
+            }
+        }
     }
 
     override fun onDestroyBinding(binding: FragmentDetailBinding) {

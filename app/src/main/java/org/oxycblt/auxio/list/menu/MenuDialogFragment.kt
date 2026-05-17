@@ -130,11 +130,27 @@ abstract class MenuDialogFragment<M : Menu> :
         updateMenu(requireBinding(), casted)
     }
 
+    /**
+     * Called before the default dismiss-and-delegate behaviour. If a subclass returns true, the
+     * dialog is NOT automatically dismissed; the subclass is responsible for any navigation.
+     * This allows certain actions (e.g. opening a nested dialog) to drive their own navigation
+     * instead of first popping back and then pushing forward.
+     *
+     * @param item The [MenuItem] that was clicked.
+     * @return true if this subclass handled navigation, false to use the default behaviour.
+     */
+    protected open fun interceptClick(item: MenuItem): Boolean = false
+
     final override fun onClick(item: MenuItem, viewHolder: RecyclerView.ViewHolder) {
-        // All option selections close the dialog currently.
-        // TODO: This should change if the app is 100% migrated to menu dialogs
-        findNavController().navigateUp()
-        // Delegate to impl on how to handle items
-        @Suppress("UNCHECKED_CAST") onClick(item, menuModel.currentMenu.value as M)
+        @Suppress("UNCHECKED_CAST") val menu = menuModel.currentMenu.value as M
+        // Give the subclass a chance to handle navigation itself (e.g. push a nested dialog).
+        // Only pop back to the caller if nothing intercepted.
+        if (!interceptClick(item)) {
+            // All option selections close the dialog currently.
+            // TODO: This should change if the app is 100% migrated to menu dialogs
+            findNavController().navigateUp()
+        }
+        // Delegate to impl on how to handle the item regardless of who did navigation.
+        onClick(item, menu)
     }
 }

@@ -66,7 +66,7 @@ private class ExploreStepImpl(private val fs: FS, private val storage: Storage) 
                 }
                 when (val cacheResult = storage.cache.read(file)) {
                     is CacheResult.Hit -> NeedsHydration(cacheResult.file)
-                    is CacheResult.Stale -> Finalized(NewSong(cacheResult.file))
+                    is CacheResult.Stale -> Finalized(NewSong(cacheResult.cachedFile.file))
                     is CacheResult.Miss -> Finalized(NewSong(cacheResult.file))
                 }
             }
@@ -129,6 +129,8 @@ private class ExploreStepImpl(private val fs: FS, private val storage: Storage) 
     private data class Finalized(val explored: Explored) : Classified
 
     private companion object {
-        const val PARALLELISM = 8
+        // Scale with available CPUs: I/O-bound work benefits from more threads than cores.
+        // Clamp to [8, 16] to avoid thrashing on low-end devices or over-subscribing on high-end.
+        val PARALLELISM = (Runtime.getRuntime().availableProcessors() * 2).coerceIn(8, 16)
     }
 }

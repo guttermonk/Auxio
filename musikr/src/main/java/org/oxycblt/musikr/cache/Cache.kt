@@ -119,8 +119,10 @@ sealed interface CacheResult {
     /**
      * A cache entry was found, but it's out of date compared to the [file] given.
      *
-     * @param file the [File] that was found in the cache.
-     * @param addedMs the time the song was added to the cache.
+     * The stale [cachedFile] carries the previously-cached metadata and can be used as-is for an
+     * instant library load before re-extraction corrects the data in a background pass.
+     *
+     * @param cachedFile the previously-cached [CachedFile], now out of date.
      */
-    data class Stale(val file: File, val addedMs: Long) : CacheResult
+    data class Stale(val cachedFile: CachedFile) : CacheResult
 }

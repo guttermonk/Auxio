@@ -46,10 +46,7 @@ class DBCache private constructor(private val readDao: CacheReadDao) : Cache {
                 mapping ?: readDao.selectAllSongs().associateBy { it.uri }.also { mapping = it }
             }
         val dbSong = currentMapping[file.uri] ?: return CacheResult.Miss(file)
-        if (dbSong.modifiedMs != file.modifiedMs) {
-            return CacheResult.Stale(file, dbSong.addedMs)
-        }
-        val song =
+        val cachedFile =
             CachedFile(
                 file,
                 dbSong.mimeType?.let {
@@ -88,7 +85,11 @@ class DBCache private constructor(private val readDao: CacheReadDao) : Cache {
                 },
                 addedMs = dbSong.addedMs,
             )
-        return CacheResult.Hit(song)
+        return if (dbSong.modifiedMs != file.modifiedMs) {
+            CacheResult.Stale(cachedFile)
+        } else {
+            CacheResult.Hit(cachedFile)
+        }
     }
 
     companion object {

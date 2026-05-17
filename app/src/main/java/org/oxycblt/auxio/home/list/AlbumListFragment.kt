@@ -26,7 +26,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
+import javax.inject.Inject
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.image.covers.CustomCoverStore
 import org.oxycblt.auxio.databinding.FragmentHomeListBinding
 import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.home.HomeViewModel
@@ -64,6 +66,8 @@ class AlbumListFragment :
     override val playbackModel: PlaybackViewModel by activityViewModels()
     private val albumAdapter = AlbumAdapter(this)
 
+    @Inject lateinit var customCoverStore: CustomCoverStore
+
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentHomeListBinding.inflate(inflater)
 
@@ -94,6 +98,12 @@ class AlbumListFragment :
             playbackModel.isPlaying,
             ::updatePlayback,
         )
+        // When the user saves or resets a custom cover, rebind that specific list item so
+        // the thumbnail updates immediately without requiring a full dataset reload.
+        collect(customCoverStore.updates) { changedUid ->
+            val pos = homeModel.albumList.value.indexOfFirst { it.uid == changedUid }
+            if (pos != -1) albumAdapter.notifyItemChanged(pos)
+        }
     }
 
     override fun onDestroyBinding(binding: FragmentHomeListBinding) {

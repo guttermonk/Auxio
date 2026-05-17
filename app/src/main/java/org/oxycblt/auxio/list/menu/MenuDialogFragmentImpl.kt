@@ -118,6 +118,21 @@ class AlbumMenuDialogFragment : MenuDialogFragment<Menu.ForAlbum>() {
         binding.menuInfo.text = menu.album.artists.resolveNames(context)
     }
 
+    /**
+     * Navigate directly to the cover picker without first dismissing this dialog so that the
+     * cover picker slides in on top and the back stack lands back at the correct destination.
+     */
+    override fun interceptClick(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_change_cover) {
+            val album = (menuModel.currentMenu.value as? Menu.ForAlbum)?.album ?: return false
+            findNavController().navigate(
+                AlbumMenuDialogFragmentDirections.openCoverPicker(album.uid)
+            )
+            return true
+        }
+        return false
+    }
+
     override fun onClick(item: MenuItem, menu: Menu.ForAlbum) {
         when (item.itemId) {
             R.id.action_play -> playbackModel.play(menu.album)
@@ -134,6 +149,7 @@ class AlbumMenuDialogFragment : MenuDialogFragment<Menu.ForAlbum>() {
             R.id.action_artist_details -> detailModel.showArtist(menu.album)
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.album)
             R.id.action_share -> requireContext().share(menu.album)
+            R.id.action_change_cover -> { /* handled by interceptClick */ }
             else -> error("Unexpected menu item selected $item")
         }
     }
