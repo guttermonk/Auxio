@@ -34,7 +34,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/spacing_tiny"
         android:background="@drawable/ui_selection_badge_bg"
-        android:imageTintList="?attr/colorOnPrimary"
         android:src="@drawable/ic_check_20"
         android:visibility="gone"
         app:tint="?attr/colorOnPrimary" />
