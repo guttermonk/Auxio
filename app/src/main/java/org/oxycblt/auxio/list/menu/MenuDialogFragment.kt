@@ -132,9 +132,9 @@ abstract class MenuDialogFragment<M : Menu> :
 
     /**
      * Called before the default dismiss-and-delegate behaviour. If a subclass returns true, the
-     * dialog is NOT automatically dismissed; the subclass is responsible for any navigation.
-     * This allows certain actions (e.g. opening a nested dialog) to drive their own navigation
-     * instead of first popping back and then pushing forward.
+     * dialog is NOT automatically dismissed; the subclass is responsible for any navigation. This
+     * allows certain actions (e.g. opening a nested dialog) to drive their own navigation instead
+     * of first popping back and then pushing forward.
      *
      * @param item The [MenuItem] that was clicked.
      * @return true if this subclass handled navigation, false to use the default behaviour.

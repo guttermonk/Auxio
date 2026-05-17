@@ -46,8 +46,11 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
     ConstraintLayout(context, attrs), GestureDetector.OnDoubleTapListener {
     private sealed interface OverlayState {
         data object Invisible : OverlayState
+
         data class Entering(val tap: SpringAnimation, val seconds: SpringAnimation) : OverlayState
+
         data class Wait(val runnable: Runnable) : OverlayState
+
         data class Exiting(val tap: SpringAnimation, val seconds: SpringAnimation) : OverlayState
     }
 
