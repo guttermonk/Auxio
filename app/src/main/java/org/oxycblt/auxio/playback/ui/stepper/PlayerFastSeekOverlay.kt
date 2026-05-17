@@ -145,9 +145,7 @@ class PlayerFastSeekOverlay(context: Context, attrs: AttributeSet?) :
         val secondsIn = alphaSpring.alpha(secondsView, 1.0f)
         val tapIn = alphaSpring.alpha(tapView, 1.0f)
         // will execute after a delay
-        val out = Runnable {
-            exit(secondsView, tapView, overlayState)
-        }
+        val out = Runnable { exit(secondsView, tapView, overlayState) }
         tapIn.addEndListener { _, cancelled, _, _ ->
             if (!cancelled) {
                 postDelayed(out, EXIT_DELAY_MS)

@@ -100,24 +100,23 @@ class SecondsView(context: Context, attrs: AttributeSet?) : LinearLayout(context
     }
 
     // cycle animation for the 3 icons
-    private val cyclicAlpha =
-        floatArrayOf(
-            1.00f,
-            0.25f,
-            0.25f,
-            1.00f,
-            1.00f,
-            0.25f,
-            0.25f,
-            1.00f,
-            1.00f,
-            0.25f,
-            0.25f,
-            1.00f,
-            0.25f,
-            0.25f,
-            0.25f,
-        )
+    private val cyclicAlpha = floatArrayOf(
+        1.00f,
+        0.25f,
+        0.25f,
+        1.00f,
+        1.00f,
+        0.25f,
+        0.25f,
+        1.00f,
+        1.00f,
+        0.25f,
+        0.25f,
+        1.00f,
+        0.25f,
+        0.25f,
+        0.25f,
+    )
 
     private fun cycle(at: Int = 0) {
         animations.forEach { it.cancel() }

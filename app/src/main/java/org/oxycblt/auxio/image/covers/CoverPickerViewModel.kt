@@ -155,20 +155,23 @@ constructor(
                     R.drawable.ic_file_24,
                     R.string.lbl_browse_device,
                     CoverPickerItem.ACTION_BROWSE,
-                ))
+                )
+            )
             add(
                 CoverPickerItem.ActionItem(
                     R.drawable.ic_search_24,
                     R.string.lbl_search_online,
                     CoverPickerItem.ACTION_SEARCH,
-                ))
+                )
+            )
             if (customCoverStore.has(album.uid)) {
                 add(
                     CoverPickerItem.ActionItem(
                         R.drawable.ic_close_24,
                         R.string.lbl_reset_cover,
                         CoverPickerItem.ACTION_RESET,
-                    ))
+                    )
+                )
             }
         }
 }

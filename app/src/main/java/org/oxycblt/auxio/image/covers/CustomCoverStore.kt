@@ -40,8 +40,7 @@ import timber.log.Timber as L
  */
 @Singleton
 class CustomCoverStore @Inject constructor(@ApplicationContext private val context: Context) {
-    private val dir: File =
-        context.filesDir.resolve("custom_covers").apply { mkdirs() }
+    private val dir: File = context.filesDir.resolve("custom_covers").apply { mkdirs() }
 
     private val _updates = MutableSharedFlow<Music.UID>(extraBufferCapacity = 8)
 
@@ -67,22 +66,22 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
      */
     suspend fun save(uid: Music.UID, uri: Uri): Boolean =
         withContext(Dispatchers.IO) {
-            try {
-                val dest = fileFor(uid)
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    dest.outputStream().use { output -> input.copyTo(output) }
-                }
-                    ?: run {
-                        L.e("Could not open input stream for cover URI: $uri")
-                        return@withContext false
+                try {
+                    val dest = fileFor(uid)
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        dest.outputStream().use { output -> input.copyTo(output) }
                     }
-                L.d("Saved custom cover for $uid")
-                true
-            } catch (e: Exception) {
-                L.e(e, "Failed to save custom cover for $uid")
-                fileFor(uid).delete()
-                false
-            }
+                        ?: run {
+                            L.e("Could not open input stream for cover URI: $uri")
+                            return@withContext false
+                        }
+                    L.d("Saved custom cover for $uid")
+                    true
+                } catch (e: Exception) {
+                    L.e(e, "Failed to save custom cover for $uid")
+                    fileFor(uid).delete()
+                    false
+                }
         }.also { success ->
             if (success) _updates.tryEmit(uid)
         }
@@ -96,22 +95,22 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
      */
     suspend fun saveFromCover(uid: Music.UID, cover: org.oxycblt.musikr.covers.Cover): Boolean =
         withContext(Dispatchers.IO) {
-            try {
-                val dest = fileFor(uid)
-                cover.open()?.use { input ->
-                    dest.outputStream().use { output -> input.copyTo(output) }
-                }
-                    ?: run {
-                        L.e("Could not open stream for cover ${cover.id}")
-                        return@withContext false
+                try {
+                    val dest = fileFor(uid)
+                    cover.open()?.use { input ->
+                        dest.outputStream().use { output -> input.copyTo(output) }
                     }
-                L.d("Saved library cover for $uid")
-                true
-            } catch (e: Exception) {
-                L.e(e, "Failed to save library cover for $uid")
-                fileFor(uid).delete()
-                false
-            }
+                        ?: run {
+                            L.e("Could not open stream for cover ${cover.id}")
+                            return@withContext false
+                        }
+                    L.d("Saved library cover for $uid")
+                    true
+                } catch (e: Exception) {
+                    L.e(e, "Failed to save library cover for $uid")
+                    fileFor(uid).delete()
+                    false
+                }
         }.also { success ->
             if (success) _updates.tryEmit(uid)
         }

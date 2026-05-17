@@ -119,11 +119,10 @@ abstract class MenuDialogFragment<M : Menu> :
 
         // Disable any menu options as specified by the impl
         val disabledIds = getDisabledItemIds(casted)
-        val visible =
-            builder.children.mapTo(mutableListOf()) {
-                it.isEnabled = !disabledIds.contains(it.itemId)
-                it
-            }
+        val visible = builder.children.mapTo(mutableListOf()) {
+            it.isEnabled = !disabledIds.contains(it.itemId)
+            it
+        }
         menuAdapter.update(visible, UpdateInstructions.Diff)
 
         // Delegate to impl how to show music
