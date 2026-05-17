@@ -82,9 +82,8 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
                     fileFor(uid).delete()
                     false
                 }
-        }.also { success ->
-            if (success) _updates.tryEmit(uid)
-        }
+            }
+            .also { success -> if (success) _updates.tryEmit(uid) }
 
     /**
      * Copy the raw bytes from a library [Cover] stream into internal storage as the custom cover
@@ -111,13 +110,10 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
                     fileFor(uid).delete()
                     false
                 }
-        }.also { success ->
-            if (success) _updates.tryEmit(uid)
-        }
+            }
+            .also { success -> if (success) _updates.tryEmit(uid) }
 
-    /**
-     * Remove any custom cover for [uid], reverting to the library-derived artwork.
-     */
+    /** Remove any custom cover for [uid], reverting to the library-derived artwork. */
     fun clear(uid: Music.UID) {
         fileFor(uid).delete()
         _updates.tryEmit(uid)

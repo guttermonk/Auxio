@@ -25,9 +25,7 @@ import android.graphics.Path
 import android.util.AttributeSet
 import android.view.View
 
-/**
- * Cricle
- */
+/** Cricle */
 class TapView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     private var backgroundPaint = Paint()
