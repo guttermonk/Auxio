@@ -142,5 +142,4 @@ class SecondsView(context: Context, attrs: AttributeSet?) : LinearLayout(context
         }
         animations = listOf(one, two, three)
     }
-
 }

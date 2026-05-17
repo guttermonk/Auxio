@@ -309,10 +309,7 @@ class WidgetProvider : AppWidgetProvider() {
             setImageViewBitmap(R.id.widget_cover, state.cover)
             setContentDescription(
                 R.id.widget_cover,
-                context.getString(
-                    R.string.desc_album_cover,
-                    state.song.album.name.resolve(context),
-                ),
+                context.getString(R.string.desc_album_cover, state.song.album.name.resolve(context)),
             )
         } else {
             discardCover(context)
