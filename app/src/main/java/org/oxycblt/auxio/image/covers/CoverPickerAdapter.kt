@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.image.covers
 
 import android.view.LayoutInflater
@@ -55,8 +55,11 @@ sealed interface CoverPickerItem {
         CoverPickerItem
 
     /** A full-width action row (browse gallery, search online, reset). */
-    data class ActionItem(@DrawableRes val iconRes: Int, @StringRes val titleRes: Int, val id: Int) :
-        CoverPickerItem
+    data class ActionItem(
+        @DrawableRes val iconRes: Int,
+        @StringRes val titleRes: Int,
+        val id: Int,
+    ) : CoverPickerItem
 
     companion object {
         const val ACTION_BROWSE = 1
@@ -77,7 +80,8 @@ private const val VIEW_TYPE_ACTION = 2
 
 /**
  * Adapter for the cover picker's [RecyclerView]. Uses a [GridLayoutManager] externally configured
- * with [SPAN_COUNT] columns; section labels and action rows span the full width via [spanSizeLookup].
+ * with [SPAN_COUNT] columns; section labels and action rows span the full width via
+ * [spanSizeLookup].
  */
 class CoverPickerAdapter(
     private val imageLoader: ImageLoader,
@@ -104,8 +108,9 @@ class CoverPickerAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            VIEW_TYPE_SECTION -> SectionViewHolder(inflater.inflate(
-                org.oxycblt.auxio.R.layout.item_header, parent, false))
+            VIEW_TYPE_SECTION ->
+                SectionViewHolder(
+                    inflater.inflate(org.oxycblt.auxio.R.layout.item_header, parent, false))
             VIEW_TYPE_THUMBNAIL ->
                 ThumbnailViewHolder(ItemCoverThumbnailBinding.inflate(inflater, parent, false))
             VIEW_TYPE_ACTION ->

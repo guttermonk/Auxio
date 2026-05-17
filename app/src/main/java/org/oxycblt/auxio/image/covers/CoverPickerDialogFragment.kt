@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.image.covers
 
 import android.content.Intent
@@ -136,7 +136,8 @@ class CoverPickerDialogFragment :
     }
 
     private fun launchGalleryPicker() {
-        galleryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        galleryPicker.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
     private fun launchOnlineSearch() {

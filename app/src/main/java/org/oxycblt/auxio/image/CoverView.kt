@@ -360,9 +360,10 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
     /**
      * Bind an [Album]'s image to this view.
      *
-     * If the user has previously saved a custom cover for this album via [CoverPickerDialogFragment],
-     * that image is used instead of the library-derived artwork. Memory caching is disabled for
-     * custom covers so that a newly-saved image is always shown without stale data.
+     * If the user has previously saved a custom cover for this album via
+     * [CoverPickerDialogFragment], that image is used instead of the library-derived artwork.
+     * Memory caching is disabled for custom covers so that a newly-saved image is always shown
+     * without stale data.
      *
      * @param album The [Album] to bind to the view.
      */
@@ -379,10 +380,10 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         } else {
             bindImpl(
                 {
-                    // Generally it's not desirable for many albums to show all of their covers since
-                    // unlike artists/genres they don't really change. Therefore just pick the most
-                    // "prominent" cover (the one with the most instances) and load that like you
-                    // would a song instead.
+                    // Generally it's not desirable for many albums to show all of their covers
+                    // since unlike artists/genres they don't really change. Therefore just pick
+                    // the most "prominent" cover (the one with the most instances) and load that
+                    // like you would a song instead.
                     album.covers.covers
                         .groupBy { it.id }
                         .maxByOrNull { it.value.size }
