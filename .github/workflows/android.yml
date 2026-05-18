@@ -19,6 +19,14 @@ on:
         description: Release name (e.g. Auxio 4.0.11)
         type: string
         required: true
+      versionName:
+        description: Version name (e.g. 4.0.11)
+        type: string
+        required: true
+      versionCode:
+        description: Version code (e.g. 70)
+        type: string
+        required: true
 
 jobs:
   build-apk:
@@ -53,7 +61,7 @@ jobs:
           keyPassword=$KEY_PASSWORD
           EOF
       - name: Build release APK with Gradle
-        run: ./gradlew app:assembleRelease
+        run: ./gradlew app:assembleRelease -PversionName=${{ github.event.inputs.versionName }} -PversionCode=${{ github.event.inputs.versionCode }}
       - name: Rename artifact
         env:
           ARTIFACT_NAME: ${{ github.event.inputs.artifactName }}
