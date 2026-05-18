@@ -110,7 +110,8 @@ class CoverPickerAdapter(
         object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int =
                 when (getItemViewType(position)) {
-                    VIEW_TYPE_THUMBNAIL, VIEW_TYPE_ONLINE_THUMB -> 1
+                    VIEW_TYPE_THUMBNAIL,
+                    VIEW_TYPE_ONLINE_THUMB -> 1
                     else -> SPAN_COUNT
                 }
         }

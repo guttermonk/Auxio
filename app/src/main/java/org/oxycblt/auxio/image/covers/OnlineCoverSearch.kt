@@ -32,15 +32,7 @@ import timber.log.Timber as L
  */
 object OnlineCoverSearch {
 
-    /** A cover art result from one online source. */
-    data class Result(
-        /** Small URL suitable for a thumbnail preview. */
-        val thumbnailUrl: String,
-        /** Full-resolution URL to download when the user selects this cover. */
-        val fullUrl: String,
-        /** Human-readable source name (e.g. "iTunes"). */
-        val source: String,
-    )
+    data class Result(val thumbnailUrl: String, val fullUrl: String, val source: String)
 
     fun fetchItunes(albumName: String, artistName: String): Result? =
         try {
@@ -51,7 +43,6 @@ object OnlineCoverSearch {
             for (i in 0 until results.length()) {
                 val thumb = results.getJSONObject(i).optString("artworkUrl100")
                 if (thumb.isNotEmpty()) {
-                    // Swap the 100×100 suffix for the largest available size
                     val full = thumb.replace("100x100bb", "10000x10000bb")
                     return Result(thumb, full, "iTunes")
                 }
@@ -65,8 +56,7 @@ object OnlineCoverSearch {
     fun fetchDeezer(albumName: String, artistName: String): Result? =
         try {
             val q = URLEncoder.encode("$albumName $artistName", "UTF-8")
-            val json =
-                JSONObject(get("https://api.deezer.com/search/album?q=$q&limit=5"))
+            val json = JSONObject(get("https://api.deezer.com/search/album?q=$q&limit=5"))
             val data = json.optJSONArray("data") ?: return null
             for (i in 0 until data.length()) {
                 val coverXl = data.getJSONObject(i).optString("cover_xl")
@@ -81,24 +71,16 @@ object OnlineCoverSearch {
     fun fetchCoverArtArchive(albumName: String, artistName: String): Result? =
         try {
             val query =
-                URLEncoder.encode(
-                    "release:\"$albumName\" AND artist:\"$artistName\"",
-                    "UTF-8",
-                )
-            val mbUrl =
-                "https://musicbrainz.org/ws/2/release/?query=$query&limit=5&fmt=json"
+                URLEncoder.encode("release:\"$albumName\" AND artist:\"$artistName\"", "UTF-8")
+            val mbUrl = "https://musicbrainz.org/ws/2/release/?query=$query&limit=5&fmt=json"
             // MusicBrainz API policy requires a descriptive User-Agent.
             val json =
-                JSONObject(
-                    get(mbUrl, userAgent = "Auxio/4.0 (github.com/OxygenCobalt/Auxio)")
-                )
+                JSONObject(get(mbUrl, userAgent = "Auxio/4.0 (github.com/OxygenCobalt/Auxio)"))
             val releases = json.optJSONArray("releases") ?: return null
             for (i in 0 until releases.length()) {
                 val release = releases.getJSONObject(i)
                 val hasArt =
-                    release
-                        .optJSONObject("cover-art-archive")
-                        ?.optBoolean("artwork", false)
+                    release.optJSONObject("cover-art-archive")?.optBoolean("artwork", false)
                         ?: false
                 if (hasArt) {
                     val mbid = release.optString("id")

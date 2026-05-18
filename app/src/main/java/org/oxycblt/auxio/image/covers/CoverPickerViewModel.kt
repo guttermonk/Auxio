@@ -176,15 +176,15 @@ constructor(
                 listOf(
                         async { OnlineCoverSearch.fetchItunes(albumName, artistName) },
                         async { OnlineCoverSearch.fetchDeezer(albumName, artistName) },
-                        async {
-                            OnlineCoverSearch.fetchCoverArtArchive(albumName, artistName)
-                        },
+                        async { OnlineCoverSearch.fetchCoverArtArchive(albumName, artistName) },
                     )
                     .awaitAll()
 
             val items =
                 rawResults.filterNotNull().mapIndexedNotNull { idx, result ->
-                    val file = downloadThumbnail(result.thumbnailUrl, idx) ?: return@mapIndexedNotNull null
+                    val file =
+                        downloadThumbnail(result.thumbnailUrl, idx)
+                            ?: return@mapIndexedNotNull null
                     CoverPickerItem.OnlineCoverOption(file, result.fullUrl, result.source, idx)
                 }
 
