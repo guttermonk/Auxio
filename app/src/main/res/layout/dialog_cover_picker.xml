@@ -92,7 +92,8 @@
         android:id="@+id/cover_picker_recycler"
         style="@style/Widget.Auxio.RecyclerView.Linear"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="320dp"
         android:overScrollMode="never"
         tools:listitem="@layout/item_cover_thumbnail" />
 
