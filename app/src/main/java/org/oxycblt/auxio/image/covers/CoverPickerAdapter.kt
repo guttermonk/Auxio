@@ -18,7 +18,7 @@
  
 package org.oxycblt.auxio.image.covers
 
-import android.net.Uri
+import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -151,7 +151,7 @@ class CoverPickerAdapter(
                 (holder as ThumbnailViewHolder).bind(item, imageLoader, listener)
             is CoverPickerItem.ActionItem -> (holder as ActionViewHolder).bind(item, listener)
             is CoverPickerItem.OnlineCoverOption ->
-                (holder as OnlineThumbnailViewHolder).bind(item, imageLoader, listener)
+                (holder as OnlineThumbnailViewHolder).bind(item, listener)
         }
     }
 
@@ -235,24 +235,11 @@ private class ActionViewHolder(private val binding: ItemMenuOptionBinding) :
 
 private class OnlineThumbnailViewHolder(private val binding: ItemCoverThumbnailBinding) :
     RecyclerView.ViewHolder(binding.root) {
-    fun bind(
-        item: CoverPickerItem.OnlineCoverOption,
-        imageLoader: ImageLoader,
-        listener: CoverPickerListener,
-    ) {
+    fun bind(item: CoverPickerItem.OnlineCoverOption, listener: CoverPickerListener) {
         binding.root.setOnClickListener { listener.onOnlineCoverSelected(item) }
         binding.coverThumbnailCheck.isVisible = false
-        val context = binding.root.context
-        val cornerPx = context.resources.getDimension(org.oxycblt.auxio.R.dimen.spacing_small)
-        imageLoader.enqueue(
-            ImageRequest.Builder(context)
-                .data(Uri.fromFile(item.thumbFile))
-                .target(binding.coverThumbnailImage)
-                .transformations(
-                    SquareCropTransformation.INSTANCE,
-                    RoundedRectTransformation(cornerPx),
-                )
-                .build()
+        binding.coverThumbnailImage.setImageBitmap(
+            BitmapFactory.decodeFile(item.thumbFile.absolutePath)
         )
     }
 }
