@@ -528,7 +528,9 @@
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForAlbum$Parcel" />
         <action
             android:id="@+id/open_cover_picker"
-            app:destination="@id/cover_picker_dialog" />
+            app:destination="@id/cover_picker_dialog"
+            app:popUpTo="@id/album_menu_dialog"
+            app:popUpToInclusive="true" />
     </dialog>
 
     <dialog
