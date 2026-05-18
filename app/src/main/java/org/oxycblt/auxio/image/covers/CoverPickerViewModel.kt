@@ -29,6 +29,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -172,18 +173,22 @@ constructor(
         val albumName = album.name.resolve(context)
         val artistName = album.artists.resolveNames(context)
         viewModelScope.launch(Dispatchers.IO) {
-            val rawResults =
-                listOf(
-                        async { OnlineCoverSearch.fetchItunes(albumName, artistName) },
-                        async { OnlineCoverSearch.fetchDeezer(albumName, artistName) },
-                        async { OnlineCoverSearch.fetchCoverArtArchive(albumName, artistName) },
-                    )
-                    .awaitAll()
+            // Phase 1: search with album + artist
+            var unique = fetchAllSources(albumName, artistName)
 
+            // Phase 2: if fewer than 3, retry with album name only (if artist was provided)
+            if (unique.size < 3 && artistName.isNotEmpty()) {
+                val extra = fetchAllSources(albumName, "")
+                val seen = unique.map { it.fullUrl }.toSet()
+                unique = unique + extra.filter { it.fullUrl !in seen }
+            }
+
+            val capped = unique.take(3)
             val items =
-                rawResults.filterNotNull().mapIndexedNotNull { idx, result ->
+                capped.mapIndexedNotNull { idx, result ->
                     val file =
-                        downloadThumbnail(result.thumbnailUrl, idx) ?: return@mapIndexedNotNull null
+                        downloadThumbnail(result.thumbnailUrl, idx)
+                            ?: return@mapIndexedNotNull null
                     CoverPickerItem.OnlineCoverOption(file, result.fullUrl, result.source, idx)
                 }
 
@@ -193,6 +198,23 @@ constructor(
                 _currentAlbum.value?.let { _pickerItems.value = buildItems(it) }
             }
         }
+    }
+
+    private suspend fun fetchAllSources(
+        albumName: String,
+        artistName: String,
+    ): List<OnlineCoverSearch.Result> = coroutineScope {
+        val all =
+            listOf(
+                    async { OnlineCoverSearch.fetchItunes(albumName, artistName) },
+                    async { OnlineCoverSearch.fetchDeezer(albumName, artistName) },
+                    async { OnlineCoverSearch.fetchCoverArtArchive(albumName, artistName) },
+                    async { OnlineCoverSearch.fetchTheAudioDB(albumName, artistName) },
+                )
+                .awaitAll()
+                .flatten()
+        val seen = mutableSetOf<String>()
+        all.filter { seen.add(it.fullUrl) }
     }
 
     private fun downloadThumbnail(url: String, index: Int): File? =

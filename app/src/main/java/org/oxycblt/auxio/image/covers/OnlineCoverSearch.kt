@@ -34,69 +34,90 @@ object OnlineCoverSearch {
 
     data class Result(val thumbnailUrl: String, val fullUrl: String, val source: String)
 
-    fun fetchItunes(albumName: String, artistName: String): Result? =
+    fun fetchItunes(albumName: String, artistName: String): List<Result> =
         try {
-            val q = URLEncoder.encode("$albumName $artistName", "UTF-8")
+            val terms =
+                if (artistName.isNotEmpty()) "$albumName $artistName" else albumName
+            val q = URLEncoder.encode(terms, "UTF-8")
             val json =
                 JSONObject(get("https://itunes.apple.com/search?term=$q&entity=album&limit=5"))
-            val results = json.optJSONArray("results") ?: return null
-            for (i in 0 until results.length()) {
+            val results = json.optJSONArray("results") ?: return emptyList()
+            (0 until results.length()).mapNotNull { i ->
                 val thumb = results.getJSONObject(i).optString("artworkUrl100")
-                if (thumb.isNotEmpty()) {
-                    val full = thumb.replace("100x100bb", "10000x10000bb")
-                    return Result(thumb, full, "iTunes")
-                }
+                if (thumb.isEmpty()) return@mapNotNull null
+                Result(thumb, thumb.replace("100x100bb", "10000x10000bb"), "iTunes")
             }
-            null
         } catch (e: Exception) {
             L.w(e, "iTunes cover search failed")
-            null
+            emptyList()
         }
 
-    fun fetchDeezer(albumName: String, artistName: String): Result? =
+    fun fetchDeezer(albumName: String, artistName: String): List<Result> =
         try {
-            val q = URLEncoder.encode("$albumName $artistName", "UTF-8")
+            val terms =
+                if (artistName.isNotEmpty()) "$albumName $artistName" else albumName
+            val q = URLEncoder.encode(terms, "UTF-8")
             val json = JSONObject(get("https://api.deezer.com/search/album?q=$q&limit=5"))
-            val data = json.optJSONArray("data") ?: return null
-            for (i in 0 until data.length()) {
+            val data = json.optJSONArray("data") ?: return emptyList()
+            (0 until data.length()).mapNotNull { i ->
                 val coverXl = data.getJSONObject(i).optString("cover_xl")
-                if (coverXl.isNotEmpty()) return Result(coverXl, coverXl, "Deezer")
+                if (coverXl.isEmpty()) return@mapNotNull null
+                Result(coverXl, coverXl, "Deezer")
             }
-            null
         } catch (e: Exception) {
             L.w(e, "Deezer cover search failed")
-            null
+            emptyList()
         }
 
-    fun fetchCoverArtArchive(albumName: String, artistName: String): Result? =
+    fun fetchCoverArtArchive(albumName: String, artistName: String): List<Result> =
         try {
-            val query =
-                URLEncoder.encode("release:\"$albumName\" AND artist:\"$artistName\"", "UTF-8")
+            val raw =
+                if (artistName.isNotEmpty()) {
+                    "release:\"$albumName\" AND artist:\"$artistName\""
+                } else {
+                    "release:\"$albumName\""
+                }
+            val query = URLEncoder.encode(raw, "UTF-8")
             val mbUrl = "https://musicbrainz.org/ws/2/release/?query=$query&limit=5&fmt=json"
-            // MusicBrainz API policy requires a descriptive User-Agent.
             val json =
                 JSONObject(get(mbUrl, userAgent = "Auxio/4.0 (github.com/OxygenCobalt/Auxio)"))
-            val releases = json.optJSONArray("releases") ?: return null
-            for (i in 0 until releases.length()) {
+            val releases = json.optJSONArray("releases") ?: return emptyList()
+            (0 until releases.length()).mapNotNull { i ->
                 val release = releases.getJSONObject(i)
                 val hasArt =
                     release.optJSONObject("cover-art-archive")?.optBoolean("artwork", false)
                         ?: false
-                if (hasArt) {
-                    val mbid = release.optString("id")
-                    if (mbid.isNotEmpty()) {
-                        return Result(
-                            "https://coverartarchive.org/release/$mbid/front-250",
-                            "https://coverartarchive.org/release/$mbid/front",
-                            "MusicBrainz",
-                        )
-                    }
-                }
+                if (!hasArt) return@mapNotNull null
+                val mbid = release.optString("id")
+                if (mbid.isEmpty()) return@mapNotNull null
+                Result(
+                    "https://coverartarchive.org/release/$mbid/front-250",
+                    "https://coverartarchive.org/release/$mbid/front",
+                    "MusicBrainz",
+                )
             }
-            null
         } catch (e: Exception) {
             L.w(e, "MusicBrainz/Cover Art Archive search failed")
-            null
+            emptyList()
+        }
+
+    fun fetchTheAudioDB(albumName: String, artistName: String): List<Result> =
+        try {
+            // TheAudioDB requires an artist name; skip in fallback queries
+            if (artistName.isEmpty()) return emptyList()
+            val s = URLEncoder.encode(artistName, "UTF-8")
+            val a = URLEncoder.encode(albumName, "UTF-8")
+            val url = "https://theaudiodb.com/api/v1/json/2/searchalbum.php?s=$s&a=$a"
+            val json = JSONObject(get(url))
+            val albums = json.optJSONArray("album") ?: return emptyList()
+            (0 until albums.length()).mapNotNull { i ->
+                val thumb = albums.getJSONObject(i).optString("strAlbumThumb")
+                if (thumb.isEmpty()) return@mapNotNull null
+                Result(thumb, thumb, "TheAudioDB")
+            }
+        } catch (e: Exception) {
+            L.w(e, "TheAudioDB cover search failed")
+            emptyList()
         }
 
     private fun get(url: String, userAgent: String? = null): String {
