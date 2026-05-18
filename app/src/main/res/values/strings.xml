@@ -179,9 +179,11 @@
     <string name="lbl_cover_picker">Choose album cover</string>
     <string name="lbl_library_artwork">Artwork found in your library</string>
     <string name="lbl_online_artwork">Online matches</string>
+    <string name="lbl_searching_online">Searching online for suggestions…</string>
     <string name="lbl_browse_device">Browse device</string>
     <string name="lbl_search_online">Search online</string>
     <string name="lbl_reset_cover">Reset to default</string>
+    <string name="lbl_replace_cover">Replace cover</string>
 
     <string name="lbl_error_info">Error information</string>
     <!-- As in copied to the system clipboard -->

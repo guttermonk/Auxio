@@ -29,6 +29,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import coil3.ImageLoader
+import com.google.android.material.bottomsheet.BackportBottomSheetBehavior
+import com.google.android.material.bottomsheet.BackportBottomSheetDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import org.oxycblt.auxio.R
@@ -62,7 +65,7 @@ class CoverPickerDialogFragment :
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
                 L.d("Gallery image selected: $uri")
-                pickerModel.saveCover(uri)
+                showConfirmReplaceDialog { pickerModel.saveCover(uri) }
             }
         }
 
@@ -70,6 +73,12 @@ class CoverPickerDialogFragment :
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         DialogCoverPickerBinding.inflate(inflater)
+
+    override fun onStart() {
+        super.onStart()
+        (dialog as? BackportBottomSheetDialog)?.behavior?.state =
+            BackportBottomSheetBehavior.STATE_EXPANDED
+    }
 
     override fun onBindingCreated(binding: DialogCoverPickerBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
@@ -104,7 +113,7 @@ class CoverPickerDialogFragment :
 
     override fun onCoverSelected(item: CoverPickerItem.CoverOption) {
         L.d("Library cover selected: index=${item.index}")
-        pickerModel.saveCoverFromLibrary(item)
+        showConfirmReplaceDialog { pickerModel.saveCoverFromLibrary(item) }
     }
 
     override fun onActionSelected(item: CoverPickerItem.ActionItem) {
@@ -118,12 +127,20 @@ class CoverPickerDialogFragment :
 
     override fun onOnlineCoverSelected(item: CoverPickerItem.OnlineCoverOption) {
         L.d("Online cover selected: source=${item.source} url=${item.fullUrl}")
-        pickerModel.saveOnlineCover(item)
+        showConfirmReplaceDialog { pickerModel.saveOnlineCover(item) }
     }
 
     // -----------------------------------------------------------------------
     // Private helpers
     // -----------------------------------------------------------------------
+
+    private fun showConfirmReplaceDialog(onConfirm: () -> Unit) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.lbl_change_cover)
+            .setPositiveButton(R.string.lbl_replace_cover) { _, _ -> onConfirm() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
 
     private fun updateAlbumHeader(album: Album?) {
         if (album == null) {

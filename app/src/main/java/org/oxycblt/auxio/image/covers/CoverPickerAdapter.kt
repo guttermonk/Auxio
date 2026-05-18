@@ -18,6 +18,7 @@
  
 package org.oxycblt.auxio.image.covers
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -245,7 +246,7 @@ private class OnlineThumbnailViewHolder(private val binding: ItemCoverThumbnailB
         val cornerPx = context.resources.getDimension(org.oxycblt.auxio.R.dimen.spacing_small)
         imageLoader.enqueue(
             ImageRequest.Builder(context)
-                .data(item.thumbFile)
+                .data(Uri.fromFile(item.thumbFile))
                 .target(binding.coverThumbnailImage)
                 .transformations(
                     SquareCropTransformation.INSTANCE,

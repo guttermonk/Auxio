@@ -77,6 +77,7 @@ constructor(
 
     /** Online thumbnails discovered by the most recent search, shown in the picker. */
     private var onlineResults: List<CoverPickerItem.OnlineCoverOption> = emptyList()
+    private var isSearchingOnline = false
 
     init {
         musicRepository.addUpdateListener(this)
@@ -106,6 +107,7 @@ constructor(
         _currentAlbum.value = album
         _hasCustomCover.value = customCoverStore.has(uid)
         onlineResults = emptyList()
+        isSearchingOnline = true
         _pickerItems.value = buildItems(album)
         searchOnlineCovers(album)
     }
@@ -136,7 +138,7 @@ constructor(
             val success = customCoverStore.saveFromCover(album.uid, item.cover)
             if (success) {
                 _hasCustomCover.value = true
-                _pickerItems.value = buildItems(album, selectedIndex = item.index)
+                _pickerItems.value = buildItems(album)
             }
             _saveResult.put(success)
         }
@@ -188,6 +190,7 @@ constructor(
                 }
 
             withContext(Dispatchers.Main) {
+                isSearchingOnline = false
                 onlineResults = items
                 _currentAlbum.value?.let { _pickerItems.value = buildItems(it) }
             }
@@ -208,19 +211,15 @@ constructor(
             null
         }
 
-    private fun buildItems(album: Album, selectedIndex: Int = -1): List<CoverPickerItem> =
+    private fun buildItems(album: Album): List<CoverPickerItem> =
         buildList {
-            val covers = album.covers.covers
-            if (covers.isNotEmpty()) {
-                add(CoverPickerItem.SectionLabel(R.string.lbl_library_artwork))
-                covers.forEachIndexed { i, cover ->
-                    add(CoverPickerItem.CoverOption(cover, i, isSelected = i == selectedIndex))
+            when {
+                isSearchingOnline ->
+                    add(CoverPickerItem.SectionLabel(R.string.lbl_searching_online))
+                onlineResults.isNotEmpty() -> {
+                    add(CoverPickerItem.SectionLabel(R.string.lbl_online_artwork))
+                    addAll(onlineResults)
                 }
-            }
-
-            if (onlineResults.isNotEmpty()) {
-                add(CoverPickerItem.SectionLabel(R.string.lbl_online_artwork))
-                addAll(onlineResults)
             }
 
             add(
