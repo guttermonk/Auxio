@@ -76,8 +76,11 @@ class CoverPickerDialogFragment :
 
     override fun onStart() {
         super.onStart()
-        (dialog as? BackportBottomSheetDialog)?.behavior?.state =
-            BackportBottomSheetBehavior.STATE_EXPANDED
+        (dialog as? BackportBottomSheetDialog)?.behavior?.apply {
+            isFitToContents = false
+            skipCollapsed = true
+            state = BackportBottomSheetBehavior.STATE_EXPANDED
+        }
     }
 
     override fun onBindingCreated(binding: DialogCoverPickerBinding, savedInstanceState: Bundle?) {
