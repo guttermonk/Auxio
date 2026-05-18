@@ -22,6 +22,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
@@ -76,11 +77,8 @@ class CoverPickerDialogFragment :
 
     override fun onStart() {
         super.onStart()
-        (dialog as? BackportBottomSheetDialog)?.behavior?.apply {
-            isFitToContents = false
-            skipCollapsed = true
-            state = BackportBottomSheetBehavior.STATE_EXPANDED
-        }
+        (dialog as? BackportBottomSheetDialog)?.behavior?.state =
+            BackportBottomSheetBehavior.STATE_EXPANDED
     }
 
     override fun onBindingCreated(binding: DialogCoverPickerBinding, savedInstanceState: Bundle?) {
@@ -101,7 +99,14 @@ class CoverPickerDialogFragment :
 
         pickerModel.setAlbum(args.albumUid)
         collectImmediately(pickerModel.currentAlbum, ::updateAlbumHeader)
-        collectImmediately(pickerModel.pickerItems) { items -> coverAdapter.submitList(items) }
+        collectImmediately(pickerModel.pickerItems) { items ->
+            coverAdapter.submitList(items) {
+                // Re-measure the bottom sheet so it grows to fit thumbnails
+                dialog
+                    ?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                    ?.requestLayout()
+            }
+        }
         collect(pickerModel.saveResult.flow, ::handleSaveResult)
     }
 
