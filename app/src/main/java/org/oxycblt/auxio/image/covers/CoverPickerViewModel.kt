@@ -176,14 +176,14 @@ constructor(
             // Phase 1: search with album + artist
             var unique = fetchAllSources(albumName, artistName)
 
-            // Phase 2: if fewer than 3, retry with album name only (if artist was provided)
-            if (unique.size < 3 && artistName.isNotEmpty()) {
+            // Phase 2: if fewer than 6, retry with album name only (if artist was provided)
+            if (unique.size < 6 && artistName.isNotEmpty()) {
                 val extra = fetchAllSources(albumName, "")
                 val seen = unique.map { it.fullUrl }.toSet()
                 unique = unique + extra.filter { it.fullUrl !in seen }
             }
 
-            val capped = unique.take(3)
+            val capped = unique.take(6)
             val items =
                 capped.mapIndexedNotNull { idx, result ->
                     val file =
@@ -209,6 +209,7 @@ constructor(
                     async { OnlineCoverSearch.fetchDeezer(albumName, artistName) },
                     async { OnlineCoverSearch.fetchCoverArtArchive(albumName, artistName) },
                     async { OnlineCoverSearch.fetchTheAudioDB(albumName, artistName) },
+                    async { OnlineCoverSearch.fetchWikipedia(albumName, artistName) },
                 )
                 .awaitAll()
                 .flatten()

@@ -25,8 +25,8 @@ import org.json.JSONObject
 import timber.log.Timber as L
 
 /**
- * Fetches album cover art URLs from three free, no-key-required online sources: iTunes Search API,
- * Deezer API, and the MusicBrainz/Cover Art Archive.
+ * Fetches album cover art URLs from free, no-key-required online sources: iTunes Search API, Deezer
+ * API, MusicBrainz/Cover Art Archive, TheAudioDB, and Wikipedia.
  *
  * All methods are blocking and must be called from a background thread.
  */
@@ -115,6 +115,31 @@ object OnlineCoverSearch {
             }
         } catch (e: Exception) {
             L.w(e, "TheAudioDB cover search failed")
+            emptyList()
+        }
+
+    fun fetchWikipedia(albumName: String, artistName: String): List<Result> =
+        try {
+            val terms = if (artistName.isNotEmpty()) "$albumName $artistName album" else albumName
+            val q = URLEncoder.encode(terms, "UTF-8")
+            val url =
+                "https://en.wikipedia.org/w/api.php?action=query&generator=search" +
+                    "&gsrsearch=$q&gsrlimit=5&prop=pageimages" +
+                    "&piprop=thumbnail|original&pithumbsize=250&format=json"
+            val ua = "Auxio/4.0 (github.com/OxygenCobalt/Auxio)"
+            val json = JSONObject(get(url, userAgent = ua))
+            val pages =
+                json.optJSONObject("query")?.optJSONObject("pages") ?: return emptyList()
+            pages.keys().asSequence().mapNotNull { key ->
+                val page = pages.getJSONObject(key)
+                val thumb =
+                    page.optJSONObject("thumbnail")?.optString("source")
+                        ?: return@mapNotNull null
+                val original = page.optJSONObject("original")?.optString("source") ?: thumb
+                Result(thumb, original, "Wikipedia")
+            }.toList()
+        } catch (e: Exception) {
+            L.w(e, "Wikipedia cover search failed")
             emptyList()
         }
 
