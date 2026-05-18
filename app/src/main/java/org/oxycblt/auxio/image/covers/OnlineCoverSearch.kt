@@ -128,16 +128,19 @@ object OnlineCoverSearch {
                     "&piprop=thumbnail|original&pithumbsize=250&format=json"
             val ua = "Auxio/4.0 (github.com/OxygenCobalt/Auxio)"
             val json = JSONObject(get(url, userAgent = ua))
-            val pages =
-                json.optJSONObject("query")?.optJSONObject("pages") ?: return emptyList()
-            pages.keys().asSequence().mapNotNull { key ->
-                val page = pages.getJSONObject(key)
-                val thumb =
-                    page.optJSONObject("thumbnail")?.optString("source")
-                        ?: return@mapNotNull null
-                val original = page.optJSONObject("original")?.optString("source") ?: thumb
-                Result(thumb, original, "Wikipedia")
-            }.toList()
+            val pages = json.optJSONObject("query")?.optJSONObject("pages") ?: return emptyList()
+            pages
+                .keys()
+                .asSequence()
+                .mapNotNull { key ->
+                    val page = pages.getJSONObject(key)
+                    val thumb =
+                        page.optJSONObject("thumbnail")?.optString("source")
+                            ?: return@mapNotNull null
+                    val original = page.optJSONObject("original")?.optString("source") ?: thumb
+                    Result(thumb, original, "Wikipedia")
+                }
+                .toList()
         } catch (e: Exception) {
             L.w(e, "Wikipedia cover search failed")
             emptyList()
