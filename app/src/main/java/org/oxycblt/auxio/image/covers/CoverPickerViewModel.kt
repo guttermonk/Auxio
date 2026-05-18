@@ -18,16 +18,25 @@
  
 package org.oxycblt.auxio.image.covers
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
@@ -42,6 +51,7 @@ import timber.log.Timber as L
 class CoverPickerViewModel
 @Inject
 constructor(
+    @ApplicationContext private val context: Context,
     private val musicRepository: MusicRepository,
     private val customCoverStore: CustomCoverStore,
 ) : ViewModel(), MusicRepository.UpdateListener {
@@ -65,6 +75,9 @@ constructor(
      */
     val saveResult: Event<Boolean> = _saveResult
 
+    /** Online thumbnails discovered by the most recent search, shown in the picker. */
+    private var onlineResults: List<CoverPickerItem.OnlineCoverOption> = emptyList()
+
     init {
         musicRepository.addUpdateListener(this)
     }
@@ -80,7 +93,7 @@ constructor(
 
     /**
      * Load the album identified by [uid] from the current library. Safe to call multiple times;
-     * only the most recent uid matters.
+     * only the most recent uid matters. Also kicks off an online cover search in the background.
      */
     fun setAlbum(uid: Music.UID) {
         val album = musicRepository.library?.findAlbum(uid)
@@ -92,7 +105,9 @@ constructor(
         }
         _currentAlbum.value = album
         _hasCustomCover.value = customCoverStore.has(uid)
+        onlineResults = emptyList()
         _pickerItems.value = buildItems(album)
+        searchOnlineCovers(album)
     }
 
     /**
@@ -136,9 +151,63 @@ constructor(
         _saveResult.put(true)
     }
 
+    /** Download and save the full-resolution image for [item] as the album's custom cover. */
+    fun saveOnlineCover(item: CoverPickerItem.OnlineCoverOption) {
+        val album = _currentAlbum.value ?: return
+        viewModelScope.launch {
+            val success = customCoverStore.saveFromUrl(album.uid, item.fullUrl)
+            if (success) {
+                _hasCustomCover.value = true
+                _pickerItems.value = buildItems(album)
+            }
+            _saveResult.put(success)
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Internal helpers
     // -----------------------------------------------------------------------
+
+    private fun searchOnlineCovers(album: Album) {
+        val albumName = album.name.resolve(context)
+        val artistName = album.artists.resolveNames(context)
+        viewModelScope.launch(Dispatchers.IO) {
+            val rawResults =
+                listOf(
+                        async { OnlineCoverSearch.fetchItunes(albumName, artistName) },
+                        async { OnlineCoverSearch.fetchDeezer(albumName, artistName) },
+                        async {
+                            OnlineCoverSearch.fetchCoverArtArchive(albumName, artistName)
+                        },
+                    )
+                    .awaitAll()
+
+            val items =
+                rawResults.filterNotNull().mapIndexedNotNull { idx, result ->
+                    val file = downloadThumbnail(result.thumbnailUrl, idx) ?: return@mapIndexedNotNull null
+                    CoverPickerItem.OnlineCoverOption(file, result.fullUrl, result.source, idx)
+                }
+
+            withContext(Dispatchers.Main) {
+                onlineResults = items
+                _currentAlbum.value?.let { _pickerItems.value = buildItems(it) }
+            }
+        }
+    }
+
+    private fun downloadThumbnail(url: String, index: Int): File? =
+        try {
+            val file = File(context.cacheDir, "auxio_cover_thumb_$index")
+            val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 10_000
+            conn.readTimeout = 10_000
+            conn.instanceFollowRedirects = true
+            conn.inputStream.use { input -> file.outputStream().use { out -> input.copyTo(out) } }
+            file
+        } catch (e: Exception) {
+            L.w(e, "Failed to download thumbnail from $url")
+            null
+        }
 
     private fun buildItems(album: Album, selectedIndex: Int = -1): List<CoverPickerItem> =
         buildList {
@@ -148,6 +217,11 @@ constructor(
                 covers.forEachIndexed { i, cover ->
                     add(CoverPickerItem.CoverOption(cover, i, isSelected = i == selectedIndex))
                 }
+            }
+
+            if (onlineResults.isNotEmpty()) {
+                add(CoverPickerItem.SectionLabel(R.string.lbl_online_artwork))
+                addAll(onlineResults)
             }
 
             add(

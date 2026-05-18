@@ -22,6 +22,8 @@ import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +109,33 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
                     true
                 } catch (e: Exception) {
                     L.e(e, "Failed to save library cover for $uid")
+                    fileFor(uid).delete()
+                    false
+                }
+            }
+            .also { success -> if (success) _updates.tryEmit(uid) }
+
+    /**
+     * Download the image at [url] directly into internal storage as the custom cover for [uid].
+     * Used when the user picks an online match from the cover picker.
+     *
+     * @return true on success, false if the download or write fails.
+     */
+    suspend fun saveFromUrl(uid: Music.UID, url: String): Boolean =
+        withContext(Dispatchers.IO) {
+                try {
+                    val dest = fileFor(uid)
+                    val conn = URL(url).openConnection() as HttpURLConnection
+                    conn.connectTimeout = 15_000
+                    conn.readTimeout = 60_000
+                    conn.instanceFollowRedirects = true
+                    conn.inputStream.use { input ->
+                        dest.outputStream().use { output -> input.copyTo(output) }
+                    }
+                    L.d("Saved online cover for $uid from $url")
+                    true
+                } catch (e: Exception) {
+                    L.e(e, "Failed to download cover from $url for $uid")
                     fileFor(uid).delete()
                     false
                 }

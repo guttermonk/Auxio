@@ -116,6 +116,11 @@ class CoverPickerDialogFragment :
         }
     }
 
+    override fun onOnlineCoverSelected(item: CoverPickerItem.OnlineCoverOption) {
+        L.d("Online cover selected: source=${item.source} url=${item.fullUrl}")
+        pickerModel.saveOnlineCover(item)
+    }
+
     // -----------------------------------------------------------------------
     // Private helpers
     // -----------------------------------------------------------------------

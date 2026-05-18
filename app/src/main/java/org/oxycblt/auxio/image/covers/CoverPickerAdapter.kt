@@ -32,6 +32,7 @@ import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.target
 import coil3.request.transformations
+import java.io.File
 import org.oxycblt.auxio.databinding.ItemCoverThumbnailBinding
 import org.oxycblt.auxio.databinding.ItemMenuOptionBinding
 import org.oxycblt.auxio.image.coil.RoundedRectTransformation
@@ -61,6 +62,18 @@ sealed interface CoverPickerItem {
         val id: Int,
     ) : CoverPickerItem
 
+    /**
+     * A cover thumbnail fetched from an online source. The thumbnail has already been downloaded to
+     * [thumbFile] so Coil can load it without a network fetcher. [fullUrl] is used when the user
+     * selects this cover.
+     */
+    data class OnlineCoverOption(
+        val thumbFile: File,
+        val fullUrl: String,
+        val source: String,
+        val index: Int,
+    ) : CoverPickerItem
+
     companion object {
         const val ACTION_BROWSE = 1
         const val ACTION_SEARCH = 2
@@ -73,11 +86,14 @@ interface CoverPickerListener {
     fun onCoverSelected(item: CoverPickerItem.CoverOption)
 
     fun onActionSelected(item: CoverPickerItem.ActionItem)
+
+    fun onOnlineCoverSelected(item: CoverPickerItem.OnlineCoverOption)
 }
 
 private const val VIEW_TYPE_SECTION = 0
 private const val VIEW_TYPE_THUMBNAIL = 1
 private const val VIEW_TYPE_ACTION = 2
+private const val VIEW_TYPE_ONLINE_THUMB = 3
 
 /**
  * Adapter for the cover picker's [RecyclerView]. Uses a [GridLayoutManager] externally configured
@@ -94,7 +110,7 @@ class CoverPickerAdapter(
         object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int =
                 when (getItemViewType(position)) {
-                    VIEW_TYPE_THUMBNAIL -> 1
+                    VIEW_TYPE_THUMBNAIL, VIEW_TYPE_ONLINE_THUMB -> 1
                     else -> SPAN_COUNT
                 }
         }
@@ -104,6 +120,7 @@ class CoverPickerAdapter(
             is CoverPickerItem.SectionLabel -> VIEW_TYPE_SECTION
             is CoverPickerItem.CoverOption -> VIEW_TYPE_THUMBNAIL
             is CoverPickerItem.ActionItem -> VIEW_TYPE_ACTION
+            is CoverPickerItem.OnlineCoverOption -> VIEW_TYPE_ONLINE_THUMB
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -117,6 +134,10 @@ class CoverPickerAdapter(
                 ThumbnailViewHolder(ItemCoverThumbnailBinding.inflate(inflater, parent, false))
             VIEW_TYPE_ACTION ->
                 ActionViewHolder(ItemMenuOptionBinding.inflate(inflater, parent, false))
+            VIEW_TYPE_ONLINE_THUMB ->
+                OnlineThumbnailViewHolder(
+                    ItemCoverThumbnailBinding.inflate(inflater, parent, false)
+                )
             else -> error("Unknown viewType $viewType")
         }
     }
@@ -127,6 +148,8 @@ class CoverPickerAdapter(
             is CoverPickerItem.CoverOption ->
                 (holder as ThumbnailViewHolder).bind(item, imageLoader, listener)
             is CoverPickerItem.ActionItem -> (holder as ActionViewHolder).bind(item, listener)
+            is CoverPickerItem.OnlineCoverOption ->
+                (holder as OnlineThumbnailViewHolder).bind(item, imageLoader, listener)
         }
     }
 
@@ -143,6 +166,8 @@ class CoverPickerAdapter(
                             a.index == b.index
                         a is CoverPickerItem.ActionItem && b is CoverPickerItem.ActionItem ->
                             a.id == b.id
+                        a is CoverPickerItem.OnlineCoverOption &&
+                            b is CoverPickerItem.OnlineCoverOption -> a.index == b.index
                         else -> false
                     }
 
@@ -203,5 +228,29 @@ private class ActionViewHolder(private val binding: ItemMenuOptionBinding) :
                 null,
             )
         }
+    }
+}
+
+private class OnlineThumbnailViewHolder(private val binding: ItemCoverThumbnailBinding) :
+    RecyclerView.ViewHolder(binding.root) {
+    fun bind(
+        item: CoverPickerItem.OnlineCoverOption,
+        imageLoader: ImageLoader,
+        listener: CoverPickerListener,
+    ) {
+        binding.root.setOnClickListener { listener.onOnlineCoverSelected(item) }
+        binding.coverThumbnailCheck.isVisible = false
+        val context = binding.root.context
+        val cornerPx = context.resources.getDimension(org.oxycblt.auxio.R.dimen.spacing_small)
+        imageLoader.enqueue(
+            ImageRequest.Builder(context)
+                .data(item.thumbFile)
+                .target(binding.coverThumbnailImage)
+                .transformations(
+                    SquareCropTransformation.INSTANCE,
+                    RoundedRectTransformation(cornerPx),
+                )
+                .build()
+        )
     }
 }
