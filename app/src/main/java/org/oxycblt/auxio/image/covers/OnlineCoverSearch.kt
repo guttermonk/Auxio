@@ -36,8 +36,7 @@ object OnlineCoverSearch {
 
     fun fetchItunes(albumName: String, artistName: String): List<Result> =
         try {
-            val terms =
-                if (artistName.isNotEmpty()) "$albumName $artistName" else albumName
+            val terms = if (artistName.isNotEmpty()) "$albumName $artistName" else albumName
             val q = URLEncoder.encode(terms, "UTF-8")
             val json =
                 JSONObject(get("https://itunes.apple.com/search?term=$q&entity=album&limit=5"))
@@ -54,8 +53,7 @@ object OnlineCoverSearch {
 
     fun fetchDeezer(albumName: String, artistName: String): List<Result> =
         try {
-            val terms =
-                if (artistName.isNotEmpty()) "$albumName $artistName" else albumName
+            val terms = if (artistName.isNotEmpty()) "$albumName $artistName" else albumName
             val q = URLEncoder.encode(terms, "UTF-8")
             val json = JSONObject(get("https://api.deezer.com/search/album?q=$q&limit=5"))
             val data = json.optJSONArray("data") ?: return emptyList()

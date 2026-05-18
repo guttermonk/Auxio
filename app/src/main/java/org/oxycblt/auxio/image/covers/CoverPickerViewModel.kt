@@ -187,8 +187,7 @@ constructor(
             val items =
                 capped.mapIndexedNotNull { idx, result ->
                     val file =
-                        downloadThumbnail(result.thumbnailUrl, idx)
-                            ?: return@mapIndexedNotNull null
+                        downloadThumbnail(result.thumbnailUrl, idx) ?: return@mapIndexedNotNull null
                     CoverPickerItem.OnlineCoverOption(file, result.fullUrl, result.source, idx)
                 }
 
