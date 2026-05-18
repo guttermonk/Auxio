@@ -116,11 +116,12 @@ constructor(
      * Persist the image at [uri] as the custom cover for the current album. Emits the result via
      * [saveResult].
      */
-    fun saveCover(uri: Uri) {
+    fun saveCover(uri: Uri, permanent: Boolean = false) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
             val success = customCoverStore.save(album.uid, uri)
             if (success) {
+                if (permanent) customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
             }
@@ -128,15 +129,12 @@ constructor(
         }
     }
 
-    /**
-     * Persist a library [Cover] (by its byte data) as the custom cover for the current album. The
-     * Cover's stream is copied into internal storage so it survives library rescans.
-     */
-    fun saveCoverFromLibrary(item: CoverPickerItem.CoverOption) {
+    fun saveCoverFromLibrary(item: CoverPickerItem.CoverOption, permanent: Boolean = false) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
             val success = customCoverStore.saveFromCover(album.uid, item.cover)
             if (success) {
+                if (permanent) customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
             }
@@ -153,12 +151,12 @@ constructor(
         _saveResult.put(true)
     }
 
-    /** Download and save the full-resolution image for [item] as the album's custom cover. */
-    fun saveOnlineCover(item: CoverPickerItem.OnlineCoverOption) {
+    fun saveOnlineCover(item: CoverPickerItem.OnlineCoverOption, permanent: Boolean = false) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
             val success = customCoverStore.saveFromUrl(album.uid, item.fullUrl)
             if (success) {
+                if (permanent) customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
             }
@@ -234,7 +232,7 @@ constructor(
                 CoverPickerItem.ACTION_SEARCH,
             )
         )
-        if (customCoverStore.has(album.uid)) {
+        if (customCoverStore.has(album.uid) && !customCoverStore.isPermanent(album.uid)) {
             add(
                 CoverPickerItem.ActionItem(
                     R.drawable.ic_close_24,

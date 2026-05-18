@@ -61,6 +61,16 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
     /** Returns true if a custom cover has been saved for [uid]. */
     fun has(uid: Music.UID): Boolean = fileFor(uid).exists()
 
+    /** Returns true if the custom cover for [uid] permanently replaces the default. */
+    fun isPermanent(uid: Music.UID): Boolean = permanentFileFor(uid).exists()
+
+    /** Mark the custom cover for [uid] as a permanent replacement of the default artwork. */
+    fun markPermanent(uid: Music.UID) {
+        permanentFileFor(uid).createNewFile()
+    }
+
+    private fun permanentFileFor(uid: Music.UID): File = File(fileFor(uid).path + ".permanent")
+
     /**
      * Copy the image at [uri] into internal storage as the custom cover for [uid].
      *
@@ -145,6 +155,7 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
     /** Remove any custom cover for [uid], reverting to the library-derived artwork. */
     fun clear(uid: Music.UID) {
         fileFor(uid).delete()
+        permanentFileFor(uid).delete()
         _updates.tryEmit(uid)
         L.d("Cleared custom cover for $uid")
     }

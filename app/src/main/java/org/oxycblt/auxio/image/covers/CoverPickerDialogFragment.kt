@@ -65,7 +65,7 @@ class CoverPickerDialogFragment :
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
                 L.d("Gallery image selected: $uri")
-                showConfirmReplaceDialog { pickerModel.saveCover(uri) }
+                showConfirmDialog { permanent -> pickerModel.saveCover(uri, permanent) }
             }
         }
 
@@ -116,7 +116,7 @@ class CoverPickerDialogFragment :
 
     override fun onCoverSelected(item: CoverPickerItem.CoverOption) {
         L.d("Library cover selected: index=${item.index}")
-        showConfirmReplaceDialog { pickerModel.saveCoverFromLibrary(item) }
+        showConfirmDialog { permanent -> pickerModel.saveCoverFromLibrary(item, permanent) }
     }
 
     override fun onActionSelected(item: CoverPickerItem.ActionItem) {
@@ -130,17 +130,18 @@ class CoverPickerDialogFragment :
 
     override fun onOnlineCoverSelected(item: CoverPickerItem.OnlineCoverOption) {
         L.d("Online cover selected: source=${item.source} url=${item.fullUrl}")
-        showConfirmReplaceDialog { pickerModel.saveOnlineCover(item) }
+        showConfirmDialog { permanent -> pickerModel.saveOnlineCover(item, permanent) }
     }
 
     // -----------------------------------------------------------------------
     // Private helpers
     // -----------------------------------------------------------------------
 
-    private fun showConfirmReplaceDialog(onConfirm: () -> Unit) {
+    private fun showConfirmDialog(onSave: (permanent: Boolean) -> Unit) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.lbl_change_cover)
-            .setPositiveButton(R.string.lbl_replace_cover) { _, _ -> onConfirm() }
+            .setPositiveButton(R.string.lbl_replace_cover) { _, _ -> onSave(true) }
+            .setNeutralButton(R.string.lbl_update_cover) { _, _ -> onSave(false) }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }

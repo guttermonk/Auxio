@@ -184,6 +184,7 @@
     <string name="lbl_search_online">Search online</string>
     <string name="lbl_reset_cover">Reset to default</string>
     <string name="lbl_replace_cover">Replace cover</string>
+    <string name="lbl_update_cover">Update cover</string>
 
     <string name="lbl_error_info">Error information</string>
     <!-- As in copied to the system clipboard -->
