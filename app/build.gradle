@@ -40,6 +40,20 @@ android {
         }
     }
 
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                def props = new Properties()
+                props.load(new FileInputStream(keystorePropertiesFile))
+                storeFile file(props['storeFile'])
+                storePassword props['storePassword']
+                keyAlias props['keyAlias']
+                keyPassword props['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix ".debug"
@@ -47,6 +61,7 @@ android {
         }
 
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
