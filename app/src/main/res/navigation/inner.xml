@@ -31,6 +31,9 @@
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
         <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
+        <action
             android:id="@+id/show_album"
             app:destination="@id/album_detail_fragment" />
         <action
@@ -142,6 +145,16 @@
             app:argType="org.oxycblt.musikr.Music$UID" />
     </dialog>
 
+    <dialog
+        android:id="@+id/tag_editor_dialog"
+        android:name="org.oxycblt.auxio.detail.TagEditorDialog"
+        android:label="tag_editor_dialog"
+        tools:layout="@layout/dialog_tag_editor">
+        <argument
+            android:name="songUid"
+            app:argType="org.oxycblt.musikr.Music$UID" />
+    </dialog>
+
     <fragment
         android:id="@+id/search_fragment"
         android:name="org.oxycblt.auxio.search.SearchFragment"
@@ -150,6 +163,9 @@
         <action
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
+        <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
         <action
             android:id="@+id/show_album"
             app:destination="@id/album_detail_fragment" />
@@ -218,6 +234,9 @@
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
         <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
+        <action
             android:id="@+id/show_album"
             app:destination="@id/album_detail_fragment" />
         <action
@@ -266,6 +285,9 @@
         <action
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
+        <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
         <action
             android:id="@+id/show_album"
             app:destination="@id/album_detail_fragment" />
@@ -316,6 +338,9 @@
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
         <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
+        <action
             android:id="@+id/show_album"
             app:destination="@id/album_detail_fragment" />
         <action
@@ -364,6 +389,9 @@
         <action
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
+        <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
         <action
             android:id="@+id/show_album"
             app:destination="@id/album_detail_fragment" />
@@ -516,6 +544,9 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForSong$Parcel" />
+        <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
     </dialog>
 
     <dialog

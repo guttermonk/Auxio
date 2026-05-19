@@ -131,10 +131,15 @@
     <string name="lbl_artist_details">Go to artist</string>
     <string name="lbl_album_details">Go to album</string>
     <string name="lbl_song_detail">View properties</string>
+    <string name="lbl_edit_tags">Edit tags</string>
     <string name="lbl_parent_detail">View</string>
     <string name="lbl_share">Share</string>
 
     <string name="lbl_props">Song properties</string>
+    <string name="lbl_title">Title</string>
+    <string name="lbl_album_artist">Album artist</string>
+    <string name="lbl_year">Year</string>
+    <string name="lbl_comment">Comment</string>
     <string name="lbl_path">Path</string>
     <!-- As in audio format -->
     <string name="lbl_format">Format</string>
@@ -226,6 +231,8 @@
     <string name="lng_cover_saved">Cover updated</string>
     <string name="lng_cover_reset">Cover reset to default</string>
     <string name="lng_cover_save_failed">Could not save cover</string>
+    <string name="lng_tags_saved">Tags saved</string>
+    <string name="lng_tags_save_failed">Could not save tags</string>
     <string name="err_no_browser">No browser app found to open search</string>
     <string name="lng_empty_artists">Your artists will show up here.</string>
     <string name="lng_empty_genres">Your genres will show up here.</string>

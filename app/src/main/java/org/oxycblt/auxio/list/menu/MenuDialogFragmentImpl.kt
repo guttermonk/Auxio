@@ -69,6 +69,16 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
         binding.menuInfo.text = menu.song.artists.resolveNames(context)
     }
 
+    override fun interceptClick(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_edit_tags) {
+            val song = (menuModel.currentMenu.value as? Menu.ForSong)?.song ?: return false
+            findNavController()
+                .navigate(SongMenuDialogFragmentDirections.editTags(song.uid))
+            return true
+        }
+        return false
+    }
+
     override fun onClick(item: MenuItem, menu: Menu.ForSong) {
         when (item.itemId) {
             R.id.action_play -> playbackModel.playExplicit(menu.song, menu.playWith)
@@ -86,6 +96,9 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
             R.id.action_album_details -> detailModel.showAlbum(menu.song.album)
             R.id.action_share -> requireContext().share(menu.song)
             R.id.action_detail -> detailModel.showSong(menu.song)
+            R.id.action_edit_tags -> {
+                /* handled by interceptClick */
+            }
             else -> error("Unexpected menu item selected $item")
         }
     }
