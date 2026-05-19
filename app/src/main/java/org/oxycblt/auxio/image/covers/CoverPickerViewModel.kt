@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.detail.TagEditorService
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
@@ -55,6 +56,7 @@ constructor(
     @ApplicationContext private val context: Context,
     private val musicRepository: MusicRepository,
     private val customCoverStore: CustomCoverStore,
+    private val tagEditorService: TagEditorService,
 ) : ViewModel(), MusicRepository.UpdateListener {
 
     private val _currentAlbum = MutableStateFlow<Album?>(null)
@@ -125,6 +127,7 @@ constructor(
                 customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
+                embedCoverInSongs(album)
             }
             _saveResult.put(success)
         }
@@ -138,6 +141,7 @@ constructor(
                 customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
+                embedCoverInSongs(album)
             }
             _saveResult.put(success)
         }
@@ -151,6 +155,7 @@ constructor(
                 customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
+                embedCoverInSongs(album)
             }
             _saveResult.put(success)
         }
@@ -167,6 +172,16 @@ constructor(
     // -----------------------------------------------------------------------
     // Internal helpers
     // -----------------------------------------------------------------------
+
+    private suspend fun embedCoverInSongs(album: Album) {
+        val coverFile = customCoverStore.fileFor(album.uid)
+        if (!coverFile.exists()) return
+        for (song in album.songs) {
+            val ok = tagEditorService.writeCoverArt(song.uri, song.path.name, coverFile)
+            if (!ok) L.w("Failed to embed cover art in ${song.path.name}")
+        }
+        L.d("Embedded cover art in ${album.songs.size} songs")
+    }
 
     private fun searchOnlineCovers(album: Album) {
         val albumName = album.name.resolve(context)

@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.images.ArtworkFactory
 import timber.log.Timber as L
 
 data class TagFields(
@@ -126,6 +127,25 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 copyBack(tempFile, uri)
             } catch (e: Exception) {
                 L.e(e, "Failed to write partial tags to $uri")
+                false
+            } finally {
+                tempFile.delete()
+            }
+        }
+
+    suspend fun writeCoverArt(songUri: Uri, fileName: String?, coverFile: File): Boolean =
+        withContext(Dispatchers.IO) {
+            val tempFile = copyToTemp(songUri, fileName) ?: return@withContext false
+            try {
+                val audioFile = AudioFileIO.read(tempFile)
+                val tag = audioFile.tagOrCreateAndSetDefault
+                val artwork = ArtworkFactory.createArtworkFromFile(coverFile)
+                tag.deleteArtworkField()
+                tag.setField(artwork)
+                audioFile.commit()
+                copyBack(tempFile, songUri)
+            } catch (e: Exception) {
+                L.e(e, "Failed to write cover art to $songUri")
                 false
             } finally {
                 tempFile.delete()
