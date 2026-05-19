@@ -377,8 +377,19 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
     override val parcel
         get() = args.parcel
 
-    // Nothing to disable in song menus.
+    // Nothing to disable in selection menus.
     override fun getDisabledItemIds(menu: Menu.ForSelection) = setOf<Int>()
+
+    override fun interceptClick(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_edit_tags) {
+            val menu = menuModel.currentMenu.value as? Menu.ForSelection ?: return false
+            val uids = menu.songs.map { it.uid }.toTypedArray()
+            findNavController()
+                .navigate(SelectionMenuDialogFragmentDirections.editTagsBulk(uids))
+            return true
+        }
+        return false
+    }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForSelection) {
         binding.menuCover.bind(
@@ -406,6 +417,9 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
                 requireContext().showToast(R.string.lng_queue_added)
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.songs)
+            R.id.action_edit_tags -> {
+                /* handled by interceptClick */
+            }
             R.id.action_share -> requireContext().share(menu.songs)
             else -> error("Unexpected menu item selected $item")
         }

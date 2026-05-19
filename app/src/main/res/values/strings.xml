@@ -508,6 +508,11 @@
         <item quantity="other">%d songs</item>
     </plurals>
 
+    <plurals name="fmt_editing_songs">
+        <item quantity="one">Editing tags for %d song</item>
+        <item quantity="other">Editing tags for %d songs</item>
+    </plurals>
+
     <plurals name="fmt_album_count">
         <item quantity="one">%d album</item>
         <item quantity="other">%d albums</item>

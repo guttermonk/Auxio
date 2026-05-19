@@ -95,6 +95,29 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             }
         }
 
+    suspend fun writePartialTags(
+        uri: Uri,
+        fileName: String?,
+        fields: Map<FieldKey, String>,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            val tempFile = copyToTemp(uri, fileName) ?: return@withContext false
+            try {
+                val audioFile = AudioFileIO.read(tempFile)
+                val tag = audioFile.tagOrCreateAndSetDefault
+                for ((key, value) in fields) {
+                    tag.setField(key, value)
+                }
+                audioFile.commit()
+                copyBack(tempFile, uri)
+            } catch (e: Exception) {
+                L.e(e, "Failed to write partial tags to $uri")
+                false
+            } finally {
+                tempFile.delete()
+            }
+        }
+
     private fun copyToTemp(uri: Uri, fileName: String?): File? =
         try {
             val ext = fileName?.substringAfterLast('.', "") ?: ""

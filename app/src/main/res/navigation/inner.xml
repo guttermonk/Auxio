@@ -615,6 +615,19 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForSelection$Parcel" />
+        <action
+            android:id="@+id/edit_tags_bulk"
+            app:destination="@id/bulk_tag_editor_dialog" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/bulk_tag_editor_dialog"
+        android:name="org.oxycblt.auxio.detail.BulkTagEditorDialog"
+        android:label="bulk_tag_editor_dialog"
+        tools:layout="@layout/dialog_bulk_tag_editor">
+        <argument
+            android:name="songUids"
+            app:argType="org.oxycblt.musikr.Music$UID[]" />
     </dialog>
 
     <dialog
