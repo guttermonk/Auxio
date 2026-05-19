@@ -79,7 +79,7 @@ constructor(
     private fun loadSharedTags(songs: List<Song>) {
         _isLoading.value = true
         viewModelScope.launch {
-            val allFields = songs.mapNotNull { tagEditorService.readTags(it.uri, it.path.name) }
+            val allFields = songs.mapNotNull { tagEditorService.readTags(it.uri) }
             if (allFields.isEmpty()) {
                 _isLoading.value = false
                 return@launch

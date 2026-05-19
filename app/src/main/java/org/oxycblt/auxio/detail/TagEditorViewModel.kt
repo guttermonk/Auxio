@@ -70,7 +70,7 @@ constructor(
     private fun loadTags(song: Song) {
         _isLoading.value = true
         viewModelScope.launch {
-            val fields = tagEditorService.readTags(song.uri, song.path.name)
+            val fields = tagEditorService.readTags(song.uri)
             _tagFields.value = fields
             _isLoading.value = false
         }

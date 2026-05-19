@@ -19,6 +19,7 @@
 package org.oxycblt.auxio.detail
 
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -45,28 +46,40 @@ data class TagFields(
 @Singleton
 class TagEditorService @Inject constructor(@ApplicationContext private val context: Context) {
 
-    suspend fun readTags(uri: Uri, fileName: String?): TagFields? =
+    suspend fun readTags(uri: Uri): TagFields? =
         withContext(Dispatchers.IO) {
-            val tempFile = copyToTemp(uri, fileName) ?: return@withContext null
+            val retriever = MediaMetadataRetriever()
             try {
-                val audioFile = AudioFileIO.read(tempFile)
-                val tag = audioFile.tagOrCreateAndSetDefault
+                retriever.setDataSource(context, uri)
                 TagFields(
-                    title = tag.getFirst(FieldKey.TITLE),
-                    artist = tag.getFirst(FieldKey.ARTIST),
-                    album = tag.getFirst(FieldKey.ALBUM),
-                    albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST),
-                    track = tag.getFirst(FieldKey.TRACK),
-                    disc = tag.getFirst(FieldKey.DISC_NO),
-                    year = tag.getFirst(FieldKey.YEAR),
-                    genre = tag.getFirst(FieldKey.GENRE),
-                    comment = tag.getFirst(FieldKey.COMMENT),
+                    title =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: "",
+                    artist =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: "",
+                    album =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM) ?: "",
+                    albumArtist =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
+                            ?: "",
+                    track =
+                        retriever.extractMetadata(
+                            MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER
+                        ) ?: "",
+                    disc =
+                        retriever.extractMetadata(
+                            MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER
+                        ) ?: "",
+                    year =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR) ?: "",
+                    genre =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE) ?: "",
+                    comment = "",
                 )
             } catch (e: Exception) {
                 L.e(e, "Failed to read tags from $uri")
                 null
             } finally {
-                tempFile.delete()
+                retriever.release()
             }
         }
 
@@ -118,19 +131,30 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             }
         }
 
-    private fun copyToTemp(uri: Uri, fileName: String?): File? =
-        try {
+    private fun copyToTemp(uri: Uri, fileName: String?): File? {
+        return try {
             val ext = fileName?.substringAfterLast('.', "") ?: ""
             val suffix = if (ext.isNotEmpty()) ".$ext" else ""
             val tempFile = File(context.cacheDir, "auxio_tag_edit_temp$suffix")
-            context.contentResolver.openInputStream(uri)?.use { input ->
+            val stream = context.contentResolver.openInputStream(uri)
+            if (stream == null) {
+                L.e("Could not open input stream for tag editing: $uri")
+                return null
+            }
+            stream.use { input ->
                 tempFile.outputStream().use { output -> input.copyTo(output) }
-            } ?: return null
+            }
+            if (tempFile.length() == 0L) {
+                L.e("Temp file is empty after copy for tag editing: $uri")
+                tempFile.delete()
+                return null
+            }
             tempFile
         } catch (e: Exception) {
             L.e(e, "Failed to copy file to temp for tag editing")
             null
         }
+    }
 
     private fun copyBack(tempFile: File, uri: Uri): Boolean =
         try {
