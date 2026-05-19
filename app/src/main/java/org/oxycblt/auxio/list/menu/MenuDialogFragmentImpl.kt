@@ -70,12 +70,19 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
     }
 
     override fun interceptClick(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_edit_tags) {
-            val song = (menuModel.currentMenu.value as? Menu.ForSong)?.song ?: return false
-            findNavController().navigate(SongMenuDialogFragmentDirections.editTags(song.uid))
-            return true
+        val song = (menuModel.currentMenu.value as? Menu.ForSong)?.song ?: return false
+        when (item.itemId) {
+            R.id.action_edit_tags -> {
+                findNavController().navigate(SongMenuDialogFragmentDirections.editTags(song.uid))
+                return true
+            }
+            R.id.action_delete_song -> {
+                findNavController()
+                    .navigate(SongMenuDialogFragmentDirections.deleteSong(song.uid))
+                return true
+            }
+            else -> return false
         }
-        return false
     }
 
     override fun onClick(item: MenuItem, menu: Menu.ForSong) {
@@ -96,6 +103,9 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
             R.id.action_share -> requireContext().share(menu.song)
             R.id.action_detail -> detailModel.showSong(menu.song)
             R.id.action_edit_tags -> {
+                /* handled by interceptClick */
+            }
+            R.id.action_delete_song -> {
                 /* handled by interceptClick */
             }
             else -> error("Unexpected menu item selected $item")

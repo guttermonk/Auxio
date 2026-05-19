@@ -94,6 +94,8 @@
     <string name="lbl_rename_playlist">Rename playlist</string>
     <string name="lbl_delete">Delete</string>
     <string name="lbl_confirm_delete_playlist">Delete playlist?</string>
+    <string name="lbl_confirm_delete_song">Delete song?</string>
+    <string name="lbl_delete_song">Delete song</string>
     <string name="lbl_edit">Edit</string>
 
     <!-- Search for music -->
@@ -237,6 +239,8 @@
     <string name="lng_cover_save_failed">Could not save cover</string>
     <string name="lng_tags_saved">Tags saved</string>
     <string name="lng_tags_save_failed">Could not save tags</string>
+    <string name="lng_song_deleted">Song deleted</string>
+    <string name="lng_song_delete_failed">Could not delete song</string>
     <string name="err_no_browser">No browser app found to open search</string>
     <string name="lng_empty_artists">Your artists will show up here.</string>
     <string name="lng_empty_genres">Your genres will show up here.</string>
