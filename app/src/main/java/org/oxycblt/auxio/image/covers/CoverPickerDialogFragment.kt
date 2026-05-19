@@ -19,9 +19,11 @@
 package org.oxycblt.auxio.image.covers
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.widget.ImageView
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
@@ -36,6 +38,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogCoverPickerBinding
+import org.oxycblt.auxio.image.CoverView
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.ui.ViewBindingBottomSheetDialogFragment
@@ -65,7 +68,7 @@ class CoverPickerDialogFragment :
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
                 L.d("Gallery image selected: $uri")
-                showConfirmDialog { permanent -> pickerModel.saveCover(uri, permanent) }
+                showConfirmDialog(newCoverUri = uri) { pickerModel.saveCover(uri) }
             }
         }
 
@@ -113,32 +116,56 @@ class CoverPickerDialogFragment :
 
     override fun onCoverSelected(item: CoverPickerItem.CoverOption) {
         L.d("Library cover selected: index=${item.index}")
-        showConfirmDialog { permanent -> pickerModel.saveCoverFromLibrary(item, permanent) }
+        showConfirmDialog(newCoverCover = item.cover) { pickerModel.saveCoverFromLibrary(item) }
     }
 
     override fun onActionSelected(item: CoverPickerItem.ActionItem) {
         when (item.id) {
             CoverPickerItem.ACTION_BROWSE -> launchGalleryPicker()
             CoverPickerItem.ACTION_SEARCH -> launchOnlineSearch()
-            CoverPickerItem.ACTION_RESET -> pickerModel.resetCover()
+            CoverPickerItem.ACTION_CLEAR -> confirmClearCover()
             else -> error("Unknown action id ${item.id}")
         }
     }
 
     override fun onOnlineCoverSelected(item: CoverPickerItem.OnlineCoverOption) {
         L.d("Online cover selected: source=${item.source} url=${item.fullUrl}")
-        showConfirmDialog { permanent -> pickerModel.saveOnlineCover(item, permanent) }
+        showConfirmDialog(newCoverFile = item.thumbFile) { pickerModel.saveOnlineCover(item) }
     }
 
     // -----------------------------------------------------------------------
     // Private helpers
     // -----------------------------------------------------------------------
 
-    private fun showConfirmDialog(onSave: (permanent: Boolean) -> Unit) {
+    private fun showConfirmDialog(
+        newCoverUri: Uri? = null,
+        newCoverFile: java.io.File? = null,
+        newCoverCover: org.oxycblt.musikr.covers.Cover? = null,
+        onSave: () -> Unit,
+    ) {
+        val album = pickerModel.currentAlbum.value ?: return
+        val view =
+            LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_cover_confirm, null)
+        view.findViewById<CoverView>(R.id.cover_confirm_old).bind(album)
+        val newImage = view.findViewById<ImageView>(R.id.cover_confirm_new)
+        when {
+            newCoverUri != null -> newImage.setImageURI(newCoverUri)
+            newCoverFile != null -> {
+                val bmp = BitmapFactory.decodeFile(newCoverFile.absolutePath)
+                newImage.setImageBitmap(bmp)
+            }
+            newCoverCover != null -> imageLoader.enqueue(
+                coil3.request.ImageRequest.Builder(requireContext())
+                    .data(newCoverCover)
+                    .target(newImage)
+                    .build()
+            )
+        }
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.lbl_change_cover)
-            .setPositiveButton(R.string.lbl_replace_cover) { _, _ -> onSave(true) }
-            .setNeutralButton(R.string.lbl_update_cover) { _, _ -> onSave(false) }
+            .setView(view)
+            .setPositiveButton(R.string.lbl_replace_cover) { _, _ -> onSave() }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
@@ -161,6 +188,15 @@ class CoverPickerDialogFragment :
         galleryPicker.launch(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
+    }
+
+    private fun confirmClearCover() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.lbl_clear_cover)
+            .setMessage(R.string.lng_clear_cover_confirm)
+            .setPositiveButton(R.string.lbl_clear) { _, _ -> pickerModel.clearCover() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun launchOnlineSearch() {
@@ -187,7 +223,7 @@ class CoverPickerDialogFragment :
             requireContext()
                 .showToast(
                     if (pickerModel.hasCustomCover.value) R.string.lng_cover_saved
-                    else R.string.lng_cover_reset
+                    else R.string.lng_cover_cleared
                 )
             // Pop both the cover picker and the album menu dialog so the user lands back
             // at the album detail (or wherever they opened the menu from).

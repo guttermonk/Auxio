@@ -143,6 +143,9 @@
         <argument
             android:name="songUid"
             app:argType="org.oxycblt.musikr.Music$UID" />
+        <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/tag_editor_dialog" />
     </dialog>
 
     <dialog

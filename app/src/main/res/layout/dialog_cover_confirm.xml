@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (c) 2025 Auxio Project
+ * dialog_cover_confirm.xml is part of Auxio.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/spacing_medium"
+    android:paddingTop="@dimen/spacing_medium"
+    android:paddingEnd="@dimen/spacing_medium"
+    android:paddingBottom="@dimen/spacing_medium">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/spacing_medium"
+        android:text="@string/lng_cover_confirm_message"
+        android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <org.oxycblt.auxio.image.CoverView
+            android:id="@+id/cover_confirm_old"
+            android:layout_width="@dimen/size_hero_small"
+            android:layout_height="@dimen/size_hero_small"
+            android:contentDescription="@string/desc_cover_old" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_medium"
+            android:layout_marginEnd="@dimen/spacing_medium"
+            android:text="\u2192"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+        <ImageView
+            android:id="@+id/cover_confirm_new"
+            android:layout_width="@dimen/size_hero_small"
+            android:layout_height="@dimen/size_hero_small"
+            android:contentDescription="@string/desc_cover_new"
+            android:scaleType="centerCrop" />
+
+    </LinearLayout>
+
+</LinearLayout>

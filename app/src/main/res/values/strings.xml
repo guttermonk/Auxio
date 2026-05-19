@@ -187,9 +187,13 @@
     <string name="lbl_searching_online">Searching online for suggestions…</string>
     <string name="lbl_browse_device">Browse device</string>
     <string name="lbl_search_online">Search online</string>
-    <string name="lbl_reset_cover">Reset to default</string>
     <string name="lbl_replace_cover">Replace cover</string>
-    <string name="lbl_update_cover">Update cover</string>
+    <string name="lbl_clear_cover">Clear cover</string>
+    <string name="lbl_clear">Clear</string>
+    <string name="lng_cover_confirm_message">Are you sure you want to make this change? It can\'t be undone.</string>
+    <string name="lng_clear_cover_confirm">Remove the cover art for this album? A placeholder icon will be shown instead.</string>
+    <string name="desc_cover_old">Current cover</string>
+    <string name="desc_cover_new">New cover</string>
 
     <string name="lbl_error_info">Error information</string>
     <!-- As in copied to the system clipboard -->
@@ -229,7 +233,7 @@
     <string name="lng_empty_songs">Your songs will show up here.</string>
     <string name="lng_empty_albums">Your albums will show up here.</string>
     <string name="lng_cover_saved">Cover updated</string>
-    <string name="lng_cover_reset">Cover reset to default</string>
+    <string name="lng_cover_cleared">Cover cleared</string>
     <string name="lng_cover_save_failed">Could not save cover</string>
     <string name="lng_tags_saved">Tags saved</string>
     <string name="lng_tags_save_failed">Could not save tags</string>

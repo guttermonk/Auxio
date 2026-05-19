@@ -368,6 +368,15 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
      * @param album The [Album] to bind to the view.
      */
     fun bind(album: Album) {
+        if (customCoverStore.isCleared(album.uid)) {
+            bindImpl(
+                { null },
+                context.getString(R.string.desc_album_cover, album.name),
+                R.drawable.ic_album_24,
+                squareishShapeAppearance,
+            )
+            return
+        }
         val customFile = customCoverStore.fileFor(album.uid)
         if (customFile.exists()) {
             bindImpl(

@@ -45,9 +45,9 @@ data class TagFields(
 @Singleton
 class TagEditorService @Inject constructor(@ApplicationContext private val context: Context) {
 
-    suspend fun readTags(uri: Uri): TagFields? =
+    suspend fun readTags(uri: Uri, fileName: String?): TagFields? =
         withContext(Dispatchers.IO) {
-            val tempFile = copyToTemp(uri) ?: return@withContext null
+            val tempFile = copyToTemp(uri, fileName) ?: return@withContext null
             try {
                 val audioFile = AudioFileIO.read(tempFile)
                 val tag = audioFile.tagOrCreateAndSetDefault
@@ -70,9 +70,9 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             }
         }
 
-    suspend fun writeTags(uri: Uri, fields: TagFields): Boolean =
+    suspend fun writeTags(uri: Uri, fileName: String?, fields: TagFields): Boolean =
         withContext(Dispatchers.IO) {
-            val tempFile = copyToTemp(uri) ?: return@withContext false
+            val tempFile = copyToTemp(uri, fileName) ?: return@withContext false
             try {
                 val audioFile = AudioFileIO.read(tempFile)
                 val tag = audioFile.tagOrCreateAndSetDefault
@@ -95,12 +95,14 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             }
         }
 
-    private fun copyToTemp(uri: Uri): File? =
+    private fun copyToTemp(uri: Uri, fileName: String?): File? =
         try {
-            val tempFile = File(context.cacheDir, "auxio_tag_edit_temp")
+            val ext = fileName?.substringAfterLast('.', "") ?: ""
+            val suffix = if (ext.isNotEmpty()) ".$ext" else ""
+            val tempFile = File(context.cacheDir, "auxio_tag_edit_temp$suffix")
             context.contentResolver.openInputStream(uri)?.use { input ->
                 tempFile.outputStream().use { output -> input.copyTo(output) }
-            }
+            } ?: return null
             tempFile
         } catch (e: Exception) {
             L.e(e, "Failed to copy file to temp for tag editing")

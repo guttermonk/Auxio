@@ -117,12 +117,12 @@ constructor(
      * Persist the image at [uri] as the custom cover for the current album. Emits the result via
      * [saveResult].
      */
-    fun saveCover(uri: Uri, permanent: Boolean = false) {
+    fun saveCover(uri: Uri) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
             val success = customCoverStore.save(album.uid, uri)
             if (success) {
-                if (permanent) customCoverStore.markPermanent(album.uid)
+                customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
             }
@@ -130,12 +130,12 @@ constructor(
         }
     }
 
-    fun saveCoverFromLibrary(item: CoverPickerItem.CoverOption, permanent: Boolean = false) {
+    fun saveCoverFromLibrary(item: CoverPickerItem.CoverOption) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
             val success = customCoverStore.saveFromCover(album.uid, item.cover)
             if (success) {
-                if (permanent) customCoverStore.markPermanent(album.uid)
+                customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
             }
@@ -143,26 +143,25 @@ constructor(
         }
     }
 
-    /** Remove the custom cover for the current album, reverting to library artwork. */
-    fun resetCover() {
-        val album = _currentAlbum.value ?: return
-        customCoverStore.clear(album.uid)
-        _hasCustomCover.value = false
-        _pickerItems.value = buildItems(album)
-        _saveResult.put(true)
-    }
-
-    fun saveOnlineCover(item: CoverPickerItem.OnlineCoverOption, permanent: Boolean = false) {
+    fun saveOnlineCover(item: CoverPickerItem.OnlineCoverOption) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
             val success = customCoverStore.saveFromUrl(album.uid, item.fullUrl)
             if (success) {
-                if (permanent) customCoverStore.markPermanent(album.uid)
+                customCoverStore.markPermanent(album.uid)
                 _hasCustomCover.value = true
                 _pickerItems.value = buildItems(album)
             }
             _saveResult.put(success)
         }
+    }
+
+    fun clearCover() {
+        val album = _currentAlbum.value ?: return
+        customCoverStore.markCleared(album.uid)
+        _hasCustomCover.value = false
+        _pickerItems.value = buildItems(album)
+        _saveResult.put(true)
     }
 
     // -----------------------------------------------------------------------
@@ -254,12 +253,12 @@ constructor(
                 CoverPickerItem.ACTION_SEARCH,
             )
         )
-        if (customCoverStore.has(album.uid) && !customCoverStore.isPermanent(album.uid)) {
+        if (!customCoverStore.isCleared(album.uid)) {
             add(
                 CoverPickerItem.ActionItem(
-                    R.drawable.ic_close_24,
-                    R.string.lbl_reset_cover,
-                    CoverPickerItem.ACTION_RESET,
+                    R.drawable.ic_delete_24,
+                    R.string.lbl_clear_cover,
+                    CoverPickerItem.ACTION_CLEAR,
                 )
             )
         }

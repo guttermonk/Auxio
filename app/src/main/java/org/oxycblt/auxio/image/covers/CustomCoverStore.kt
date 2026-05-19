@@ -69,7 +69,24 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
         permanentFileFor(uid).createNewFile()
     }
 
+    /** Returns true if the cover for [uid] has been explicitly cleared by the user. */
+    fun isCleared(uid: Music.UID): Boolean = clearedFileFor(uid).exists()
+
+    /**
+     * Mark the cover for [uid] as explicitly cleared. The album will show a placeholder icon
+     * instead of any library-derived artwork.
+     */
+    fun markCleared(uid: Music.UID) {
+        fileFor(uid).delete()
+        permanentFileFor(uid).delete()
+        clearedFileFor(uid).createNewFile()
+        _updates.tryEmit(uid)
+        L.d("Marked cover as cleared for $uid")
+    }
+
     private fun permanentFileFor(uid: Music.UID): File = File(fileFor(uid).path + ".permanent")
+
+    private fun clearedFileFor(uid: Music.UID): File = File(fileFor(uid).path + ".cleared")
 
     /**
      * Copy the image at [uri] into internal storage as the custom cover for [uid].
@@ -79,6 +96,7 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
     suspend fun save(uid: Music.UID, uri: Uri): Boolean =
         withContext(Dispatchers.IO) {
                 try {
+                    clearedFileFor(uid).delete()
                     val dest = fileFor(uid)
                     context.contentResolver.openInputStream(uri)?.use { input ->
                         dest.outputStream().use { output -> input.copyTo(output) }
@@ -107,6 +125,7 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
     suspend fun saveFromCover(uid: Music.UID, cover: org.oxycblt.musikr.covers.Cover): Boolean =
         withContext(Dispatchers.IO) {
                 try {
+                    clearedFileFor(uid).delete()
                     val dest = fileFor(uid)
                     cover.open()?.use { input ->
                         dest.outputStream().use { output -> input.copyTo(output) }
@@ -134,6 +153,7 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
     suspend fun saveFromUrl(uid: Music.UID, url: String): Boolean =
         withContext(Dispatchers.IO) {
                 try {
+                    clearedFileFor(uid).delete()
                     val dest = fileFor(uid)
                     val conn = URL(url).openConnection() as HttpURLConnection
                     conn.connectTimeout = 15_000
@@ -156,6 +176,7 @@ class CustomCoverStore @Inject constructor(@ApplicationContext private val conte
     fun clear(uid: Music.UID) {
         fileFor(uid).delete()
         permanentFileFor(uid).delete()
+        clearedFileFor(uid).delete()
         _updates.tryEmit(uid)
         L.d("Cleared custom cover for $uid")
     }

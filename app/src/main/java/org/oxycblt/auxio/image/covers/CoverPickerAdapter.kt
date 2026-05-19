@@ -78,7 +78,7 @@ sealed interface CoverPickerItem {
     companion object {
         const val ACTION_BROWSE = 1
         const val ACTION_SEARCH = 2
-        const val ACTION_RESET = 3
+        const val ACTION_CLEAR = 3
     }
 }
 

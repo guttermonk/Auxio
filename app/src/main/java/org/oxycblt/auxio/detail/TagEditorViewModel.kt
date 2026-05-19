@@ -70,7 +70,7 @@ constructor(
     private fun loadTags(song: Song) {
         _isLoading.value = true
         viewModelScope.launch {
-            val fields = tagEditorService.readTags(song.uri)
+            val fields = tagEditorService.readTags(song.uri, song.path.name)
             _tagFields.value = fields
             _isLoading.value = false
         }
@@ -80,7 +80,7 @@ constructor(
         val song = _currentSong.value ?: return
         _isLoading.value = true
         viewModelScope.launch {
-            val success = tagEditorService.writeTags(song.uri, fields)
+            val success = tagEditorService.writeTags(song.uri, song.path.name, fields)
             _isLoading.value = false
             if (success) {
                 triggerMediaScan(song)

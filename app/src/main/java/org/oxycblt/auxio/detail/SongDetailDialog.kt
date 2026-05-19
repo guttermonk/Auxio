@@ -53,7 +53,17 @@ class SongDetailDialog : ViewBindingMaterialDialogFragment<DialogSongDetailBindi
 
     override fun onConfigDialog(builder: AlertDialog.Builder) {
         super.onConfigDialog(builder)
-        builder.setTitle(R.string.lbl_props).setPositiveButton(R.string.lbl_ok, null)
+        builder
+            .setTitle(R.string.lbl_props)
+            .setPositiveButton(R.string.lbl_ok, null)
+            .setNeutralButton(R.string.lbl_edit_tags, null)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        (requireDialog() as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener {
+            findNavController().navigate(SongDetailDialogDirections.editTags(args.songUid))
+        }
     }
 
     override fun onBindingCreated(binding: DialogSongDetailBinding, savedInstanceState: Bundle?) {
