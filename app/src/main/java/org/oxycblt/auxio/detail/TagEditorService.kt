@@ -86,6 +86,7 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
         withContext(Dispatchers.IO) {
             val tempFile = copyToTemp(uri, fileName) ?: return@withContext false
             try {
+                L.d("Writing tags to temp file: ${tempFile.name} (${tempFile.length()} bytes)")
                 val audioFile = AudioFileIO.read(tempFile)
                 val tag = audioFile.tagOrCreateAndSetDefault
                 tag.setField(FieldKey.TITLE, fields.title)
@@ -98,6 +99,7 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 tag.setField(FieldKey.GENRE, fields.genre)
                 tag.setField(FieldKey.COMMENT, fields.comment)
                 audioFile.commit()
+                L.d("Tags written, copying back to $uri")
                 copyBack(tempFile, uri)
             } catch (e: Exception) {
                 L.e(e, "Failed to write tags to $uri")
@@ -135,17 +137,19 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             val ext = fileName?.substringAfterLast('.', "") ?: ""
             val suffix = if (ext.isNotEmpty()) ".$ext" else ""
             val tempFile = File(context.cacheDir, "auxio_tag_edit_temp$suffix")
-            val stream = context.contentResolver.openInputStream(uri)
-            if (stream == null) {
-                L.e("Could not open input stream for tag editing: $uri")
-                return null
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output -> input.copyTo(output) }
             }
-            stream.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
+                ?: run {
+                    L.e("Could not open input stream for tag editing: $uri")
+                    return null
+                }
             if (tempFile.length() == 0L) {
                 L.e("Temp file is empty after copy for tag editing: $uri")
                 tempFile.delete()
                 return null
             }
+            L.d("Copied ${tempFile.length()} bytes to temp file: ${tempFile.name}")
             tempFile
         } catch (e: Exception) {
             L.e(e, "Failed to copy file to temp for tag editing")
@@ -155,10 +159,15 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
 
     private fun copyBack(tempFile: File, uri: Uri): Boolean =
         try {
-            context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
-                tempFile.inputStream().use { input -> input.copyTo(output) }
+            val output = context.contentResolver.openOutputStream(uri)
+            if (output == null) {
+                L.e("Could not open output stream for writing back to $uri")
+                false
+            } else {
+                output.use { tempFile.inputStream().use { input -> input.copyTo(it) } }
+                L.d("Wrote ${tempFile.length()} bytes back to $uri")
+                true
             }
-            true
         } catch (e: Exception) {
             L.e(e, "Failed to write modified file back to $uri")
             false

@@ -565,6 +565,9 @@
             app:destination="@id/cover_picker_dialog"
             app:popUpTo="@id/album_menu_dialog"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/edit_tags_bulk"
+            app:destination="@id/bulk_tag_editor_dialog" />
     </dialog>
 
     <dialog

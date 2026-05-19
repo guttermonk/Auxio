@@ -132,13 +132,21 @@ class AlbumMenuDialogFragment : MenuDialogFragment<Menu.ForAlbum>() {
     }
 
     override fun interceptClick(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_change_cover) {
-            val album = (menuModel.currentMenu.value as? Menu.ForAlbum)?.album ?: return false
-            findNavController()
-                .navigate(AlbumMenuDialogFragmentDirections.openCoverPicker(album.uid))
-            return true
+        val album = (menuModel.currentMenu.value as? Menu.ForAlbum)?.album ?: return false
+        when (item.itemId) {
+            R.id.action_change_cover -> {
+                findNavController()
+                    .navigate(AlbumMenuDialogFragmentDirections.openCoverPicker(album.uid))
+                return true
+            }
+            R.id.action_edit_tags -> {
+                val uids = album.songs.map { it.uid }.toTypedArray()
+                findNavController()
+                    .navigate(AlbumMenuDialogFragmentDirections.editTagsBulk(uids))
+                return true
+            }
+            else -> return false
         }
-        return false
     }
 
     override fun onClick(item: MenuItem, menu: Menu.ForAlbum) {
@@ -158,6 +166,9 @@ class AlbumMenuDialogFragment : MenuDialogFragment<Menu.ForAlbum>() {
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.album)
             R.id.action_share -> requireContext().share(menu.album)
             R.id.action_change_cover -> {
+                /* handled by interceptClick */
+            }
+            R.id.action_edit_tags -> {
                 /* handled by interceptClick */
             }
             else -> error("Unexpected menu item selected $item")

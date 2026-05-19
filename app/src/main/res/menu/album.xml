@@ -33,6 +33,10 @@
         android:icon="@drawable/ic_share_24"
         android:title="@string/lbl_share" />
     <item
+        android:id="@+id/action_edit_tags"
+        android:icon="@drawable/ic_edit_24"
+        android:title="@string/lbl_edit_tags" />
+    <item
         android:id="@+id/action_change_cover"
         android:icon="@drawable/ic_edit_24"
         android:title="@string/lbl_change_cover" />
