@@ -145,8 +145,7 @@ class CoverPickerDialogFragment :
     ) {
         val album = pickerModel.currentAlbum.value ?: return
         val view =
-            LayoutInflater.from(requireContext())
-                .inflate(R.layout.dialog_cover_confirm, null)
+            LayoutInflater.from(requireContext()).inflate(R.layout.dialog_cover_confirm, null)
         view.findViewById<CoverView>(R.id.cover_confirm_old).bind(album)
         val newImage = view.findViewById<ImageView>(R.id.cover_confirm_new)
         when {
@@ -155,12 +154,13 @@ class CoverPickerDialogFragment :
                 val bmp = BitmapFactory.decodeFile(newCoverFile.absolutePath)
                 newImage.setImageBitmap(bmp)
             }
-            newCoverCover != null -> imageLoader.enqueue(
-                coil3.request.ImageRequest.Builder(requireContext())
-                    .data(newCoverCover)
-                    .target(newImage)
-                    .build()
-            )
+            newCoverCover != null ->
+                imageLoader.enqueue(
+                    coil3.request.ImageRequest.Builder(requireContext())
+                        .data(newCoverCover)
+                        .target(newImage)
+                        .build()
+                )
         }
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.lbl_change_cover)
