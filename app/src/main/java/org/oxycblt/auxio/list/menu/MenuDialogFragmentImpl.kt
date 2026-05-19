@@ -72,8 +72,7 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
     override fun interceptClick(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_edit_tags) {
             val song = (menuModel.currentMenu.value as? Menu.ForSong)?.song ?: return false
-            findNavController()
-                .navigate(SongMenuDialogFragmentDirections.editTags(song.uid))
+            findNavController().navigate(SongMenuDialogFragmentDirections.editTags(song.uid))
             return true
         }
         return false
