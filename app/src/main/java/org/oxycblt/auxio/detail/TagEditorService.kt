@@ -66,9 +66,8 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                             MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER
                         ) ?: "",
                     disc =
-                        retriever.extractMetadata(
-                            MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER
-                        ) ?: "",
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER)
+                            ?: "",
                     year =
                         retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR) ?: "",
                     genre =
@@ -141,9 +140,7 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 L.e("Could not open input stream for tag editing: $uri")
                 return null
             }
-            stream.use { input ->
-                tempFile.outputStream().use { output -> input.copyTo(output) }
-            }
+            stream.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
             if (tempFile.length() == 0L) {
                 L.e("Temp file is empty after copy for tag editing: $uri")
                 tempFile.delete()
