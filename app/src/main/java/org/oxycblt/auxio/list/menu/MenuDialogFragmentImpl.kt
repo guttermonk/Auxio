@@ -384,8 +384,7 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
         if (item.itemId == R.id.action_edit_tags) {
             val menu = menuModel.currentMenu.value as? Menu.ForSelection ?: return false
             val uids = menu.songs.map { it.uid }.toTypedArray()
-            findNavController()
-                .navigate(SelectionMenuDialogFragmentDirections.editTagsBulk(uids))
+            findNavController().navigate(SelectionMenuDialogFragmentDirections.editTagsBulk(uids))
             return true
         }
         return false

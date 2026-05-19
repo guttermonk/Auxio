@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.detail
 
 import android.content.Context
@@ -115,8 +115,7 @@ constructor(
         viewModelScope.launch {
             var allSuccess = true
             for (song in songs) {
-                val success =
-                    tagEditorService.writePartialTags(song.uri, song.path.name, changed)
+                val success = tagEditorService.writePartialTags(song.uri, song.path.name, changed)
                 if (!success) {
                     L.e("Failed to write tags for ${song.path.name}")
                     allSuccess = false

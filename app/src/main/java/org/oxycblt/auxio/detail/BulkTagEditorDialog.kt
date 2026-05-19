@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.detail
 
 import android.os.Bundle
@@ -35,8 +35,7 @@ import org.oxycblt.auxio.util.getPlural
 import org.oxycblt.auxio.util.showToast
 
 @AndroidEntryPoint
-class BulkTagEditorDialog :
-    ViewBindingMaterialDialogFragment<DialogBulkTagEditorBinding>() {
+class BulkTagEditorDialog : ViewBindingMaterialDialogFragment<DialogBulkTagEditorBinding>() {
     private val tagModel: BulkTagEditorViewModel by viewModels()
     private val args: BulkTagEditorDialogArgs by navArgs()
 
