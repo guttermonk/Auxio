@@ -31,6 +31,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.target
 import com.google.android.material.bottomsheet.BackportBottomSheetBehavior
 import com.google.android.material.bottomsheet.BackportBottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -156,7 +158,7 @@ class CoverPickerDialogFragment :
             }
             newCoverCover != null ->
                 imageLoader.enqueue(
-                    coil3.request.ImageRequest.Builder(requireContext())
+                    ImageRequest.Builder(requireContext())
                         .data(newCoverCover)
                         .target(newImage)
                         .build()
