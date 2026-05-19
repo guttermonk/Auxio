@@ -26,13 +26,13 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogDeleteSongBinding
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.ui.ViewBindingMaterialDialogFragment
 import org.oxycblt.auxio.util.showToast
-import javax.inject.Inject
 import timber.log.Timber as L
 
 @AndroidEntryPoint
@@ -70,7 +70,8 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
             return
         }
         try {
-            val deleted = DocumentsContract.deleteDocument(requireContext().contentResolver, song.uri)
+            val deleted =
+                DocumentsContract.deleteDocument(requireContext().contentResolver, song.uri)
             if (deleted) {
                 L.d("Deleted song file: ${song.path.name}")
                 requireContext().showToast(R.string.lng_song_deleted)

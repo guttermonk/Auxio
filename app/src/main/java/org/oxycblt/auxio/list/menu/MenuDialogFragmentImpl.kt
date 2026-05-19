@@ -77,8 +77,7 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
                 return true
             }
             R.id.action_delete_song -> {
-                findNavController()
-                    .navigate(SongMenuDialogFragmentDirections.deleteSong(song.uid))
+                findNavController().navigate(SongMenuDialogFragmentDirections.deleteSong(song.uid))
                 return true
             }
             else -> return false
@@ -151,8 +150,7 @@ class AlbumMenuDialogFragment : MenuDialogFragment<Menu.ForAlbum>() {
             }
             R.id.action_edit_tags -> {
                 val uids = album.songs.map { it.uid }.toTypedArray()
-                findNavController()
-                    .navigate(AlbumMenuDialogFragmentDirections.editTagsBulk(uids))
+                findNavController().navigate(AlbumMenuDialogFragmentDirections.editTagsBulk(uids))
                 return true
             }
             else -> return false
