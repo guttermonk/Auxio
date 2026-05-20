@@ -239,6 +239,21 @@ constructor(
             conn.readTimeout = 10_000
             conn.instanceFollowRedirects = true
             conn.inputStream.use { input -> file.outputStream().use { out -> input.copyTo(out) } }
+            val opts = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            android.graphics.BitmapFactory.decodeFile(file.absolutePath, opts)
+            val w = opts.outWidth
+            val h = opts.outHeight
+            if (w <= 0 || h <= 0 || w < 200 || h < 200) {
+                L.d("Thumbnail too small or unreadable: ${w}x$h from $url")
+                file.delete()
+                return null
+            }
+            val ratio = w.toFloat() / h.toFloat()
+            if (ratio < 0.85f || ratio > 1.15f) {
+                L.d("Thumbnail not square (${w}x$h, ratio=$ratio): $url")
+                file.delete()
+                return null
+            }
             file
         } catch (e: Exception) {
             L.w(e, "Failed to download thumbnail from $url")
