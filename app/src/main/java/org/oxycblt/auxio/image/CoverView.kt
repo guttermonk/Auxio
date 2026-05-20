@@ -349,13 +349,35 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
      *
      * @param song The [Song] to bind to the view.
      */
-    fun bind(song: Song) =
-        bindImpl(
-            { song.cover },
-            context.getString(R.string.desc_album_cover, song.album.name),
-            R.drawable.ic_album_24,
-            squareishShapeAppearance,
-        )
+    fun bind(song: Song) {
+        val albumUid = song.album.uid
+        if (customCoverStore.isCleared(albumUid)) {
+            bindImpl(
+                { null },
+                context.getString(R.string.desc_album_cover, song.album.name),
+                R.drawable.ic_album_24,
+                squareishShapeAppearance,
+            )
+            return
+        }
+        val customFile = customCoverStore.fileFor(albumUid)
+        if (customFile.exists()) {
+            bindImpl(
+                { customFile.toUri() },
+                context.getString(R.string.desc_album_cover, song.album.name),
+                R.drawable.ic_album_24,
+                squareishShapeAppearance,
+                disableMemoryCache = true,
+            )
+        } else {
+            bindImpl(
+                { song.cover },
+                context.getString(R.string.desc_album_cover, song.album.name),
+                R.drawable.ic_album_24,
+                squareishShapeAppearance,
+            )
+        }
+    }
 
     /**
      * Bind an [Album]'s image to this view.
