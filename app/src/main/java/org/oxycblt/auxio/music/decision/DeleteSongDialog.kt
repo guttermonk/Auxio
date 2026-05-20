@@ -18,9 +18,13 @@
  
 package org.oxycblt.auxio.music.decision
 
+import android.app.Activity
+import android.os.Build
 import android.os.Bundle
-import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.view.LayoutInflater
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -41,6 +45,18 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
     private val args: DeleteSongDialogArgs by navArgs()
 
     @Inject lateinit var musicRepository: MusicRepository
+
+    private val deletePermLauncher =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                L.d("Delete permission granted, song deleted by system")
+                requireContext().showToast(R.string.lng_song_deleted)
+                findNavController().navigateUp()
+                musicModel.refresh()
+            } else {
+                requireContext().showToast(R.string.lng_song_delete_failed)
+            }
+        }
 
     override fun onConfigDialog(builder: AlertDialog.Builder) {
         builder
@@ -69,21 +85,29 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
             findNavController().navigateUp()
             return
         }
-        try {
-            val deleted =
-                DocumentsContract.deleteDocument(requireContext().contentResolver, song.uri)
-            if (deleted) {
-                L.d("Deleted song file: ${song.path.name}")
-                requireContext().showToast(R.string.lng_song_deleted)
-                findNavController().navigateUp()
-                musicModel.refresh()
-            } else {
-                L.e("Failed to delete song file: ${song.path.name}")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val request =
+                MediaStore.createDeleteRequest(
+                    requireContext().contentResolver,
+                    listOf(song.uri),
+                )
+            deletePermLauncher.launch(IntentSenderRequest.Builder(request).build())
+        } else {
+            try {
+                val rows = requireContext().contentResolver.delete(song.uri, null, null)
+                if (rows > 0) {
+                    L.d("Deleted song file: ${song.path.name}")
+                    requireContext().showToast(R.string.lng_song_deleted)
+                    findNavController().navigateUp()
+                    musicModel.refresh()
+                } else {
+                    L.e("Failed to delete song file: ${song.path.name}")
+                    requireContext().showToast(R.string.lng_song_delete_failed)
+                }
+            } catch (e: Exception) {
+                L.e(e, "Failed to delete song file: ${song.path.name}")
                 requireContext().showToast(R.string.lng_song_delete_failed)
             }
-        } catch (e: Exception) {
-            L.e(e, "Failed to delete song file: ${song.path.name}")
-            requireContext().showToast(R.string.lng_song_delete_failed)
         }
     }
 }
