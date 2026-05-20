@@ -27,6 +27,8 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.core.view.children
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BackportBottomSheetBehavior
+import com.google.android.material.bottomsheet.BackportBottomSheetDialog
 import org.oxycblt.auxio.databinding.DialogMenuBinding
 import org.oxycblt.auxio.list.ClickableListListener
 import org.oxycblt.auxio.list.ListViewModel
@@ -75,6 +77,12 @@ abstract class MenuDialogFragment<M : Menu> :
     abstract fun onClick(item: MenuItem, menu: M)
 
     override fun onCreateBinding(inflater: LayoutInflater) = DialogMenuBinding.inflate(inflater)
+
+    override fun onStart() {
+        super.onStart()
+        (dialog as BackportBottomSheetDialog).behavior.state =
+            BackportBottomSheetBehavior.STATE_EXPANDED
+    }
 
     override fun onBindingCreated(binding: DialogMenuBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
