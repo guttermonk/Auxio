@@ -268,7 +268,7 @@ constructor(
                 CoverPickerItem.ACTION_SEARCH,
             )
         )
-        if (!customCoverStore.isCleared(album.uid)) {
+        if (_hasCustomCover.value) {
             add(
                 CoverPickerItem.ActionItem(
                     R.drawable.ic_delete_24,
