@@ -196,8 +196,7 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
         // Use openFileDescriptor with "wt" mode for reliable SAF write access.
         // openOutputStream can fail on tree-based document URIs on some devices.
         try {
-            val pfd: ParcelFileDescriptor? =
-                context.contentResolver.openFileDescriptor(uri, "wt")
+            val pfd: ParcelFileDescriptor? = context.contentResolver.openFileDescriptor(uri, "wt")
             if (pfd != null) {
                 pfd.use { fd ->
                     FileOutputStream(fd.fileDescriptor).use { output ->
