@@ -349,7 +349,8 @@ class SongGridViewHolder private constructor(private val binding: ItemGridBindin
     companion object {
         const val VIEW_TYPE = IntegerTable.VIEW_TYPE_SONG_GRID
 
-        fun from(parent: View) = SongGridViewHolder(ItemGridBinding.inflate(parent.context.inflater))
+        fun from(parent: View) =
+            SongGridViewHolder(ItemGridBinding.inflate(parent.context.inflater))
     }
 }
 

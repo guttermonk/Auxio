@@ -22,13 +22,9 @@ import org.oxycblt.auxio.IntegerTable
 
 enum class BrowserLayout(val intCode: Int) {
     LIST(IntegerTable.BROWSER_LAYOUT_LIST),
-
     SMALL_GRID(IntegerTable.BROWSER_LAYOUT_SMALL_GRID),
-
     MEDIUM_GRID(IntegerTable.BROWSER_LAYOUT_MEDIUM_GRID),
-
-    LARGE_GRID(IntegerTable.BROWSER_LAYOUT_LARGE_GRID),
-    ;
+    LARGE_GRID(IntegerTable.BROWSER_LAYOUT_LARGE_GRID);
 
     val spanCount: Int
         get() =

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.home.list
 
 import android.os.Bundle
@@ -204,7 +204,8 @@ class AlbumListFragment :
     private class AlbumAdapter(
         private val listener: SelectableListListener<Album>,
         private val isGrid: Boolean,
-    ) : SelectionIndicatorAdapter<Album, SelectionIndicatorAdapter.ViewHolder>(
+    ) :
+        SelectionIndicatorAdapter<Album, SelectionIndicatorAdapter.ViewHolder>(
             AlbumViewHolder.DIFF_CALLBACK,
         ) {
 
