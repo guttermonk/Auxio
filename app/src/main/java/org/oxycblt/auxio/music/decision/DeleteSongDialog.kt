@@ -87,10 +87,7 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val request =
-                MediaStore.createDeleteRequest(
-                    requireContext().contentResolver,
-                    listOf(song.uri),
-                )
+                MediaStore.createDeleteRequest(requireContext().contentResolver, listOf(song.uri))
             deletePermLauncher.launch(IntentSenderRequest.Builder(request).build())
         } else {
             try {
