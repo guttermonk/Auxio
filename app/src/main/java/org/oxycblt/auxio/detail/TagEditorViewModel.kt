@@ -53,8 +53,8 @@ constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _saveResult = MutableEvent<Boolean>()
-    val saveResult: Event<Boolean> = _saveResult
+    private val _saveResult = MutableEvent<String>()
+    val saveResult: Event<String> = _saveResult
 
     fun setSong(uid: Music.UID) {
         val song = musicRepository.library?.findSong(uid)
@@ -80,12 +80,12 @@ constructor(
         val song = _currentSong.value ?: return
         _isLoading.value = true
         viewModelScope.launch {
-            val success = tagEditorService.writeTags(song.uri, song.path.name, fields)
+            val error = tagEditorService.writeTags(song.uri, song.path.name, fields)
             _isLoading.value = false
-            if (success) {
+            if (error == null) {
                 triggerMediaScan(song)
             }
-            _saveResult.put(success)
+            _saveResult.put(error ?: "")
         }
     }
 

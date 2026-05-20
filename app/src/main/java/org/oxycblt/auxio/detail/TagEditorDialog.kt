@@ -113,14 +113,14 @@ class TagEditorDialog : ViewBindingMaterialDialogFragment<DialogTagEditorBinding
         tagModel.saveTags(fields)
     }
 
-    private fun handleSaveResult(success: Boolean?) {
-        if (success == null) return
+    private fun handleSaveResult(error: String?) {
+        if (error == null) return
         tagModel.saveResult.consume()
-        if (success) {
+        if (error.isEmpty()) {
             requireContext().showToast(R.string.lng_tags_saved)
             findNavController().navigateUp()
         } else {
-            requireContext().showToast(R.string.lng_tags_save_failed)
+            requireContext().showToast("Could not save tags: $error")
         }
     }
 }

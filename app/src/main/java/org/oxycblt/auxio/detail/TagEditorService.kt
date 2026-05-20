@@ -83,9 +83,9 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             }
         }
 
-    suspend fun writeTags(uri: Uri, fileName: String?, fields: TagFields): Boolean =
+    suspend fun writeTags(uri: Uri, fileName: String?, fields: TagFields): String? =
         withContext(Dispatchers.IO) {
-            val tempFile = copyToTemp(uri, fileName) ?: return@withContext false
+            val tempFile = copyToTemp(uri, fileName) ?: return@withContext "Could not copy file"
             try {
                 L.d("Writing tags to temp file: ${tempFile.name} (${tempFile.length()} bytes)")
                 val audioFile = AudioFileIO.read(tempFile)
@@ -101,10 +101,14 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 tag.setField(FieldKey.COMMENT, fields.comment)
                 audioFile.commit()
                 L.d("Tags written, copying back to $uri")
-                copyBack(tempFile, uri)
+                if (!copyBack(tempFile, uri)) {
+                    "Could not write file back"
+                } else {
+                    null
+                }
             } catch (e: Exception) {
                 L.e(e, "Failed to write tags to $uri")
-                false
+                e.message ?: "Unknown error"
             } finally {
                 tempFile.delete()
             }
