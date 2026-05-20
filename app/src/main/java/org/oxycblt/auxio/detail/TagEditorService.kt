@@ -110,8 +110,9 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 }
             } catch (e: Exception) {
                 L.e(e, "Failed to write tags to $uri")
-                val cause = generateSequence(e as Throwable) { it.cause }
-                    .joinToString(" -> ") { "${it::class.simpleName}: ${it.message}" }
+                val cause =
+                    generateSequence(e as Throwable) { it.cause }
+                        .joinToString(" -> ") { "${it::class.simpleName}: ${it.message}" }
                 cause
             } finally {
                 tempFile.delete()
