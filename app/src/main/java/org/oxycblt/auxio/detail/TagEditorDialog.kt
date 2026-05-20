@@ -142,7 +142,12 @@ class TagEditorDialog : ViewBindingMaterialDialogFragment<DialogTagEditorBinding
         tagModel.saveResult.consume()
         if (error.isEmpty()) {
             requireContext().showToast(R.string.lng_tags_saved)
-            findNavController().navigateUp()
+            val nav = findNavController()
+            if (!nav.popBackStack(R.id.song_menu_dialog, true)) {
+                if (!nav.popBackStack(R.id.song_detail_dialog, true)) {
+                    nav.navigateUp()
+                }
+            }
         } else {
             Toast.makeText(requireContext(), "Could not save tags: $error", Toast.LENGTH_LONG)
                 .show()

@@ -134,7 +134,12 @@ class BulkTagEditorDialog : ViewBindingMaterialDialogFragment<DialogBulkTagEdito
         tagModel.saveResult.consume()
         if (success) {
             requireContext().showToast(R.string.lng_tags_saved)
-            findNavController().navigateUp()
+            val nav = findNavController()
+            if (!nav.popBackStack(R.id.album_menu_dialog, true)) {
+                if (!nav.popBackStack(R.id.selection_menu_dialog, true)) {
+                    nav.navigateUp()
+                }
+            }
         } else {
             requireContext().showToast(R.string.lng_tags_save_failed)
         }

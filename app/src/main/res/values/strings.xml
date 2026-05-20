@@ -237,7 +237,7 @@
     <string name="lng_cover_saved">Cover updated</string>
     <string name="lng_cover_cleared">Cover cleared</string>
     <string name="lng_cover_save_failed">Could not save cover</string>
-    <string name="lng_tags_saved">Tags saved</string>
+    <string name="lng_tags_saved">Tags updated, please wait for the library to refresh</string>
     <string name="lng_tags_save_failed">Could not save tags</string>
     <string name="lng_song_deleted">Song deleted</string>
     <string name="lng_song_delete_failed">Could not delete song</string>
