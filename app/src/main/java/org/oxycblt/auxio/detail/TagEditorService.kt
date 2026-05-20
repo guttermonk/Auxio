@@ -29,7 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.images.ArtworkFactory
+import org.jaudiotagger.tag.images.StandardArtwork
 import timber.log.Timber as L
 
 data class TagFields(
@@ -139,7 +139,14 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             try {
                 val audioFile = AudioFileIO.read(tempFile)
                 val tag = audioFile.tagOrCreateAndSetDefault
-                val artwork = ArtworkFactory.createArtworkFromFile(coverFile)
+                val artwork = StandardArtwork()
+                artwork.binaryData = coverFile.readBytes()
+                artwork.mimeType =
+                    when {
+                        coverFile.name.endsWith(".png", true) -> "image/png"
+                        else -> "image/jpeg"
+                    }
+                artwork.pictureType = 3 // Cover (front)
                 tag.deleteArtworkField()
                 tag.setField(artwork)
                 audioFile.commit()
