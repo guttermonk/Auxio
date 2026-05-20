@@ -177,7 +177,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
         collectImmediately(homeModel.currentTabType, ::updateCurrentTab)
         collect(detailModel.toShow.flow, ::handleShow)
         collect(listModel.menu.flow, ::handleMenu)
-        collectImmediately(listModel.selected, ::updateSelection)
+        collectImmediately(listModel.selected, listModel.selectionMode, ::updateSelection)
         collectImmediately(musicModel.indexingState, ::updateIndexerState)
         collect(musicModel.playlistDecision.flow, ::handlePlaylistDecision)
         collectImmediately(musicModel.playlistMessage.flow, ::handlePlaylistMessage)
@@ -225,6 +225,11 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                         MusicType.PLAYLISTS -> HomeFragmentDirections.sortPlaylists()
                     }
                 findNavController().navigateSafe(directions)
+                true
+            }
+            R.id.action_select -> {
+                L.d("Entering selection mode")
+                listModel.enterSelectionMode()
                 true
             }
             else -> {
@@ -467,9 +472,9 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
         findNavController().navigateSafe(directions)
     }
 
-    private fun updateSelection(selected: List<Music>) {
+    private fun updateSelection(selected: List<Music>, selectionMode: Boolean) {
         val binding = requireBinding()
-        if (selected.isNotEmpty()) {
+        if (selected.isNotEmpty() || selectionMode) {
             binding.homeSelectionToolbar.title = getString(R.string.fmt_selected, selected.size)
             if (binding.homeToolbar.setVisible(R.id.home_selection_toolbar)) {
                 // New selection started, show the AppBarLayout to indicate the new state.

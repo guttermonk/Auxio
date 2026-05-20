@@ -53,6 +53,11 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
     val selected: StateFlow<List<Music>>
         get() = _selected
 
+    private val _selectionMode = MutableStateFlow(false)
+    /** Whether selection mode is active (clicks toggle selection instead of navigating). */
+    val selectionMode: StateFlow<Boolean>
+        get() = _selectionMode
+
     private val _menu = MutableEvent<Menu>()
     /**
      * A [Menu] command that is awaiting a view capable of responding to it. Null if none currently.
@@ -82,6 +87,15 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
     override fun onCleared() {
         super.onCleared()
         musicRepository.removeUpdateListener(this)
+    }
+
+    /**
+     * Enter selection mode. In this mode, clicks toggle selection instead of navigating.
+     * Exiting selection mode is done via [dropSelection].
+     */
+    fun enterSelectionMode() {
+        L.d("Entering selection mode")
+        _selectionMode.value = true
     }
 
     /**
@@ -130,6 +144,7 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
      */
     fun takeSelection(): List<Song> {
         L.d("Taking selection")
+        _selectionMode.value = false
         return peekSelection().also { _selected.value = listOf() }
     }
 
@@ -140,6 +155,7 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
      */
     fun dropSelection(): Boolean {
         L.d("Dropping selection [empty=${_selected.value.isEmpty()}]")
+        _selectionMode.value = false
         return _selected.value.isNotEmpty().also { _selected.value = listOf() }
     }
 

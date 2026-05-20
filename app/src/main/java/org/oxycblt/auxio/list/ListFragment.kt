@@ -38,8 +38,9 @@ abstract class ListFragment<in T : Music, VB : ViewBinding> :
     abstract fun onRealClick(item: T)
 
     final override fun onClick(item: T, viewHolder: RecyclerView.ViewHolder) {
-        if (listModel.selected.value.isNotEmpty()) {
-            // Map clicking an item to selecting an item when items are already selected.
+        if (listModel.selected.value.isNotEmpty() || listModel.selectionMode.value) {
+            // Map clicking an item to selecting an item when in selection mode
+            // or when items are already selected.
             listModel.select(item)
         } else {
             // Delegate to the concrete implementation when we don't select the item.

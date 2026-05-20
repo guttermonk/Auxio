@@ -113,6 +113,7 @@
     <string name="lbl_track">Track</string>
     <string name="lbl_date_added">Date added</string>
 
+    <string name="lbl_select">Select</string>
     <string name="lbl_sort">Sort</string>
     <string name="lbl_sort_mode">Sort by</string>
     <string name="lbl_sort_direction">Direction</string>

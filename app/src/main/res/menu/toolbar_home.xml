@@ -15,6 +15,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_select"
+        android:icon="@drawable/ic_check_24"
+        android:title="@string/lbl_select"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/action_settings"
         android:title="@string/set_root_title"
         app:showAsAction="never" />
