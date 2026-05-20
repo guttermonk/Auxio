@@ -182,7 +182,7 @@ class ArtistListFragment :
         private val isGrid: Boolean,
     ) :
         SelectionIndicatorAdapter<Artist, SelectionIndicatorAdapter.ViewHolder>(
-            ArtistViewHolder.DIFF_CALLBACK,
+            ArtistViewHolder.DIFF_CALLBACK
         ) {
 
         override fun getItemViewType(position: Int) =
@@ -195,10 +195,7 @@ class ArtistListFragment :
                 ArtistViewHolder.from(parent)
             }
 
-        override fun onBindViewHolder(
-            holder: SelectionIndicatorAdapter.ViewHolder,
-            position: Int,
-        ) {
+        override fun onBindViewHolder(holder: SelectionIndicatorAdapter.ViewHolder, position: Int) {
             when (holder) {
                 is ArtistGridViewHolder -> holder.bind(getItem(position), listener)
                 is ArtistViewHolder -> holder.bind(getItem(position), listener)

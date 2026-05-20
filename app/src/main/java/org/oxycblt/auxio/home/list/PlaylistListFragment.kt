@@ -194,7 +194,7 @@ class PlaylistListFragment :
         private val isGrid: Boolean,
     ) :
         SelectionIndicatorAdapter<Playlist, SelectionIndicatorAdapter.ViewHolder>(
-            PlaylistViewHolder.DIFF_CALLBACK,
+            PlaylistViewHolder.DIFF_CALLBACK
         ) {
 
         override fun getItemViewType(position: Int) =
@@ -207,10 +207,7 @@ class PlaylistListFragment :
                 PlaylistViewHolder.from(parent)
             }
 
-        override fun onBindViewHolder(
-            holder: SelectionIndicatorAdapter.ViewHolder,
-            position: Int,
-        ) {
+        override fun onBindViewHolder(holder: SelectionIndicatorAdapter.ViewHolder, position: Int) {
             when (holder) {
                 is PlaylistGridViewHolder -> holder.bind(getItem(position), listener)
                 is PlaylistViewHolder -> holder.bind(getItem(position), listener)

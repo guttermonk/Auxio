@@ -179,7 +179,7 @@ class GenreListFragment :
         private val isGrid: Boolean,
     ) :
         SelectionIndicatorAdapter<Genre, SelectionIndicatorAdapter.ViewHolder>(
-            GenreViewHolder.DIFF_CALLBACK,
+            GenreViewHolder.DIFF_CALLBACK
         ) {
 
         override fun getItemViewType(position: Int) =
@@ -192,10 +192,7 @@ class GenreListFragment :
                 GenreViewHolder.from(parent)
             }
 
-        override fun onBindViewHolder(
-            holder: SelectionIndicatorAdapter.ViewHolder,
-            position: Int,
-        ) {
+        override fun onBindViewHolder(holder: SelectionIndicatorAdapter.ViewHolder, position: Int) {
             when (holder) {
                 is GenreGridViewHolder -> holder.bind(getItem(position), listener)
                 is GenreViewHolder -> holder.bind(getItem(position), listener)
