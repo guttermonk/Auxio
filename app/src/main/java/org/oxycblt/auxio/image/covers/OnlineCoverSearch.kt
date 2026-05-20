@@ -120,9 +120,7 @@ object OnlineCoverSearch {
 
     fun fetchWikipedia(albumName: String, artistName: String): List<Result> =
         try {
-            val terms =
-                if (artistName.isNotEmpty()) "$albumName $artistName album cover art"
-                else "$albumName album cover art"
+            val terms = if (artistName.isNotEmpty()) "$albumName $artistName album" else albumName
             val q = URLEncoder.encode(terms, "UTF-8")
             val url =
                 "https://en.wikipedia.org/w/api.php?action=query&generator=search" +
