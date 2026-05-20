@@ -21,8 +21,10 @@ package org.oxycblt.auxio.detail
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.io.FileOutputStream
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.inject.Inject
@@ -103,11 +105,7 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 tag.setField(FieldKey.COMMENT, fields.comment)
                 audioFile.commit()
                 L.d("Tags written, copying back to $uri")
-                if (!copyBack(tempFile, uri)) {
-                    "Could not write file back"
-                } else {
-                    null
-                }
+                copyBack(tempFile, uri)
             } catch (e: Exception) {
                 L.e(e, "Failed to write tags to $uri")
                 val cause =
@@ -133,7 +131,7 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                     tag.setField(key, value)
                 }
                 audioFile.commit()
-                copyBack(tempFile, uri)
+                copyBack(tempFile, uri) == null
             } catch (e: Exception) {
                 L.e(e, "Failed to write partial tags to $uri")
                 false
@@ -159,7 +157,7 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 tag.deleteArtworkField()
                 tag.setField(artwork)
                 audioFile.commit()
-                copyBack(tempFile, songUri)
+                copyBack(tempFile, songUri) == null
             } catch (e: Exception) {
                 L.e(e, "Failed to write cover art to $songUri")
                 false
@@ -193,21 +191,39 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
         }
     }
 
-    private fun copyBack(tempFile: File, uri: Uri): Boolean =
+    private fun copyBack(tempFile: File, uri: Uri): String? {
+        L.d("copyBack: uri=$uri, tempSize=${tempFile.length()}")
+        // Use openFileDescriptor with "wt" mode for reliable SAF write access.
+        // openOutputStream can fail on tree-based document URIs on some devices.
         try {
-            val output = context.contentResolver.openOutputStream(uri)
-            if (output == null) {
-                L.e("Could not open output stream for writing back to $uri")
-                false
-            } else {
+            val pfd: ParcelFileDescriptor? =
+                context.contentResolver.openFileDescriptor(uri, "wt")
+            if (pfd != null) {
+                pfd.use { fd ->
+                    FileOutputStream(fd.fileDescriptor).use { output ->
+                        tempFile.inputStream().use { input -> input.copyTo(output) }
+                    }
+                }
+                L.d("Wrote ${tempFile.length()} bytes back via file descriptor")
+                return null
+            }
+            L.w("openFileDescriptor returned null for $uri")
+        } catch (e: Exception) {
+            L.w(e, "openFileDescriptor failed for $uri")
+        }
+        // Fallback to openOutputStream
+        try {
+            val output = context.contentResolver.openOutputStream(uri, "wt")
+            if (output != null) {
                 output.use { tempFile.inputStream().use { input -> input.copyTo(it) } }
-                L.d("Wrote ${tempFile.length()} bytes back to $uri")
-                true
+                L.d("Wrote ${tempFile.length()} bytes back via output stream")
+                return null
             }
         } catch (e: Exception) {
-            L.e(e, "Failed to write modified file back to $uri")
-            false
+            L.w(e, "openOutputStream also failed for $uri")
         }
+        return "No write access to $uri"
+    }
 
     companion object {
         init {
