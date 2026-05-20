@@ -331,7 +331,13 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 binding.homeIndexingError.isInvisible = true
             }
             null -> {
-                binding.homeIndexingContainer.isInvisible = true
+                binding.homeIndexingContainer.isInvisible = false
+                binding.homeIndexingProgress.apply {
+                    isInvisible = false
+                    isIndeterminate = true
+                }
+                binding.homeIndexingError.isInvisible = true
+                binding.homeIndexingContainer.setOnClickListener(null)
             }
         }
     }

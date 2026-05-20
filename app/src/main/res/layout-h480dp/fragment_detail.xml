@@ -179,4 +179,22 @@
         tools:listitem="@layout/item_song" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/detail_indexing_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="@dimen/spacing_medium"
+        android:transitionGroup="true"
+        android:visibility="invisible">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/detail_indexing_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/spacing_tiny" />
+
+    </com.google.android.material.card.MaterialCardView>
+
 </FrameLayout>
