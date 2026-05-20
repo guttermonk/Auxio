@@ -130,10 +130,7 @@ class TagEditorDialog : ViewBindingMaterialDialogFragment<DialogTagEditorBinding
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             pendingFields = fields
             val request =
-                MediaStore.createWriteRequest(
-                    requireContext().contentResolver,
-                    listOf(song.uri),
-                )
+                MediaStore.createWriteRequest(requireContext().contentResolver, listOf(song.uri))
             writePermLauncher.launch(IntentSenderRequest.Builder(request).build())
         } else {
             tagModel.saveTags(fields)
