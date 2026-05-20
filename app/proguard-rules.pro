@@ -39,3 +39,6 @@
 -dontwarn java.awt.**
 -dontwarn javax.imageio.**
 -dontwarn javax.swing.**
+
+# Keep JAudioTagger classes that use reflection for audio format detection
+-keep class org.jaudiotagger.** { *; }

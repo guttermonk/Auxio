@@ -23,6 +23,8 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.util.logging.Level
+import java.util.logging.Logger
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -108,7 +110,9 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
                 }
             } catch (e: Exception) {
                 L.e(e, "Failed to write tags to $uri")
-                e.message ?: "Unknown error"
+                val cause = generateSequence(e as Throwable) { it.cause }
+                    .joinToString(" -> ") { "${it::class.simpleName}: ${it.message}" }
+                cause
             } finally {
                 tempFile.delete()
             }
@@ -203,4 +207,14 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             L.e(e, "Failed to write modified file back to $uri")
             false
         }
+
+    companion object {
+        init {
+            // Disable JAudioTagger's java.util.logging to prevent
+            // NoSuchMethodException on Android's incomplete logging framework.
+            try {
+                Logger.getLogger("org.jaudiotagger").level = Level.OFF
+            } catch (_: Exception) {}
+        }
+    }
 }
