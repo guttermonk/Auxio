@@ -90,8 +90,8 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
     }
 
     /**
-     * Enter selection mode. In this mode, clicks toggle selection instead of navigating.
-     * Exiting selection mode is done via [dropSelection].
+     * Enter selection mode. In this mode, clicks toggle selection instead of navigating. Exiting
+     * selection mode is done via [dropSelection].
      */
     fun enterSelectionMode() {
         L.d("Entering selection mode")
