@@ -18,10 +18,15 @@
  
 package org.oxycblt.auxio.detail
 
+import android.app.Activity
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -40,6 +45,16 @@ import timber.log.Timber as L
 class TagEditorDialog : ViewBindingMaterialDialogFragment<DialogTagEditorBinding>() {
     private val tagModel: TagEditorViewModel by viewModels()
     private val args: TagEditorDialogArgs by navArgs()
+    private var pendingFields: TagFields? = null
+
+    private val writePermLauncher =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            val fields = pendingFields
+            pendingFields = null
+            if (result.resultCode == Activity.RESULT_OK && fields != null) {
+                tagModel.saveTags(fields)
+            }
+        }
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         DialogTagEditorBinding.inflate(inflater)
@@ -111,7 +126,18 @@ class TagEditorDialog : ViewBindingMaterialDialogFragment<DialogTagEditorBinding
                 genre = binding.tagEditorGenre.text.toString(),
                 comment = binding.tagEditorComment.text.toString(),
             )
-        tagModel.saveTags(fields)
+        val song = tagModel.currentSong.value ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            pendingFields = fields
+            val request =
+                MediaStore.createWriteRequest(
+                    requireContext().contentResolver,
+                    listOf(song.uri),
+                )
+            writePermLauncher.launch(IntentSenderRequest.Builder(request).build())
+        } else {
+            tagModel.saveTags(fields)
+        }
     }
 
     private fun handleSaveResult(error: String?) {

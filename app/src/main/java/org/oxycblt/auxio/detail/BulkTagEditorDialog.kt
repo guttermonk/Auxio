@@ -18,9 +18,14 @@
  
 package org.oxycblt.auxio.detail
 
+import android.app.Activity
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -38,6 +43,16 @@ import org.oxycblt.auxio.util.showToast
 class BulkTagEditorDialog : ViewBindingMaterialDialogFragment<DialogBulkTagEditorBinding>() {
     private val tagModel: BulkTagEditorViewModel by viewModels()
     private val args: BulkTagEditorDialogArgs by navArgs()
+    private var pendingFields: BulkTagFields? = null
+
+    private val writePermLauncher =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            val fields = pendingFields
+            pendingFields = null
+            if (result.resultCode == Activity.RESULT_OK && fields != null) {
+                tagModel.saveTags(fields)
+            }
+        }
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         DialogBulkTagEditorBinding.inflate(inflater)
@@ -100,7 +115,18 @@ class BulkTagEditorDialog : ViewBindingMaterialDialogFragment<DialogBulkTagEdito
                 year = binding.bulkTagEditorYear.text.toString(),
                 genre = binding.bulkTagEditorGenre.text.toString(),
             )
-        tagModel.saveTags(fields)
+        val songs = tagModel.songs.value
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && songs.isNotEmpty()) {
+            pendingFields = fields
+            val request =
+                MediaStore.createWriteRequest(
+                    requireContext().contentResolver,
+                    songs.map { it.uri },
+                )
+            writePermLauncher.launch(IntentSenderRequest.Builder(request).build())
+        } else {
+            tagModel.saveTags(fields)
+        }
     }
 
     private fun handleSaveResult(success: Boolean?) {
