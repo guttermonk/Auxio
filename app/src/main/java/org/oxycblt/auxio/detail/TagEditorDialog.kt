@@ -29,6 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogTagEditorBinding
 import org.oxycblt.auxio.ui.ViewBindingMaterialDialogFragment
+import android.widget.Toast
 import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.showToast
@@ -120,7 +121,8 @@ class TagEditorDialog : ViewBindingMaterialDialogFragment<DialogTagEditorBinding
             requireContext().showToast(R.string.lng_tags_saved)
             findNavController().navigateUp()
         } else {
-            requireContext().showToast("Could not save tags: $error")
+            Toast.makeText(requireContext(), "Could not save tags: $error", Toast.LENGTH_LONG)
+                .show()
         }
     }
 }
