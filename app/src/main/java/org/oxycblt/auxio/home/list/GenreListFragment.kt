@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package org.oxycblt.auxio.home.list
 
 import android.os.Bundle
@@ -24,16 +24,21 @@ import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.GridLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentHomeListBinding
 import org.oxycblt.auxio.detail.DetailViewModel
+import org.oxycblt.auxio.home.BrowserLayout
+import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.recycler.FastScrollRecyclerView
+import org.oxycblt.auxio.list.recycler.GenreGridViewHolder
 import org.oxycblt.auxio.list.recycler.GenreViewHolder
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.IndexingState
@@ -61,7 +66,8 @@ class GenreListFragment :
     override val listModel: ListViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
-    private val genreAdapter = GenreAdapter(this)
+    @Inject lateinit var homeSettings: HomeSettings
+    private var genreAdapter: GenreAdapter? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentHomeListBinding.inflate(inflater)
@@ -69,11 +75,18 @@ class GenreListFragment :
     override fun onBindingCreated(binding: FragmentHomeListBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
 
+        val layout = homeSettings.genreBrowserLayout
+        val adapter = GenreAdapter(this, layout != BrowserLayout.LIST)
+        genreAdapter = adapter
+
         binding.homeRecycler.apply {
             id = R.id.home_genre_recycler
-            adapter = genreAdapter
+            this.adapter = adapter
             popupProvider = this@GenreListFragment
             listener = this@GenreListFragment
+            if (layout != BrowserLayout.LIST) {
+                (layoutManager as? GridLayoutManager)?.spanCount = layout.spanCount
+            }
         }
 
         binding.homeNoMusicPlaceholder.apply {
@@ -102,6 +115,7 @@ class GenreListFragment :
             popupProvider = null
             listener = null
         }
+        genreAdapter = null
     }
 
     override fun getPopupData(pos: Int): FastScrollRecyclerView.PopupProvider.PopupData? {
@@ -140,7 +154,7 @@ class GenreListFragment :
     }
 
     private fun updateGenres(genres: List<Genre>) {
-        genreAdapter.update(genres, homeModel.genreInstructions.consume())
+        genreAdapter?.update(genres, homeModel.genreInstructions.consume())
     }
 
     private fun updateNoMusicIndicator(empty: Boolean, indexingState: IndexingState?) {
@@ -152,28 +166,39 @@ class GenreListFragment :
     }
 
     private fun updateSelection(selection: List<Music>) {
-        genreAdapter.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
+        genreAdapter?.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
     }
 
     private fun updatePlayback(song: Song?, parent: MusicParent?, isPlaying: Boolean) {
-        // Only highlight the genre if it is currently playing, and if the currently
-        // playing song is also contained within.
         val genre = (parent as? Genre)?.takeIf { song?.run { genres.contains(it) } ?: false }
-        genreAdapter.setPlaying(genre, isPlaying)
+        genreAdapter?.setPlaying(genre, isPlaying)
     }
 
-    /**
-     * A [SelectionIndicatorAdapter] that shows a list of [Genre]s using [GenreViewHolder].
-     *
-     * @param listener An [SelectableListListener] to bind interactions to.
-     */
-    private class GenreAdapter(private val listener: SelectableListListener<Genre>) :
-        SelectionIndicatorAdapter<Genre, GenreViewHolder>(GenreViewHolder.DIFF_CALLBACK) {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            GenreViewHolder.from(parent)
+    private class GenreAdapter(
+        private val listener: SelectableListListener<Genre>,
+        private val isGrid: Boolean,
+    ) : SelectionIndicatorAdapter<Genre, SelectionIndicatorAdapter.ViewHolder>(
+            GenreViewHolder.DIFF_CALLBACK,
+        ) {
 
-        override fun onBindViewHolder(holder: GenreViewHolder, position: Int) {
-            holder.bind(getItem(position), listener)
+        override fun getItemViewType(position: Int) =
+            if (isGrid) GenreGridViewHolder.VIEW_TYPE else GenreViewHolder.VIEW_TYPE
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            if (viewType == GenreGridViewHolder.VIEW_TYPE) {
+                GenreGridViewHolder.from(parent)
+            } else {
+                GenreViewHolder.from(parent)
+            }
+
+        override fun onBindViewHolder(
+            holder: SelectionIndicatorAdapter.ViewHolder,
+            position: Int,
+        ) {
+            when (holder) {
+                is GenreGridViewHolder -> holder.bind(getItem(position), listener)
+                is GenreViewHolder -> holder.bind(getItem(position), listener)
+            }
         }
     }
 }

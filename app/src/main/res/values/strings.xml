@@ -276,6 +276,17 @@
     <string name="set_lib_tabs_desc">Change visibility and order of library tabs</string>
     <!-- Skip to next (song) -->
     <string name="set_bar_action">Custom playback bar action</string>
+
+    <string name="set_song_browser">Song Browser</string>
+    <string name="set_album_browser">Album Browser</string>
+    <string name="set_artist_browser">Artist Browser</string>
+    <string name="set_genre_browser">Genre Browser</string>
+    <string name="set_playlist_browser">Playlist Browser</string>
+    <string name="set_browser_layout">Layout</string>
+    <string name="set_browser_layout_list">List</string>
+    <string name="set_browser_layout_small_grid">Small grid</string>
+    <string name="set_browser_layout_medium_grid">Medium grid</string>
+    <string name="set_browser_layout_large_grid">Large grid</string>
     <string name="set_action_mode_next">Skip to next</string>
     <string name="set_action_mode_repeat">Repeat mode</string>
     <string name="set_behavior">Behavior</string>

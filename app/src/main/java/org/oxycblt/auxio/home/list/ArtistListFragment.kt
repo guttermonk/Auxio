@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package org.oxycblt.auxio.home.list
 
 import android.os.Bundle
@@ -24,15 +24,20 @@ import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.GridLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentHomeListBinding
 import org.oxycblt.auxio.detail.DetailViewModel
+import org.oxycblt.auxio.home.BrowserLayout
+import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
+import org.oxycblt.auxio.list.recycler.ArtistGridViewHolder
 import org.oxycblt.auxio.list.recycler.ArtistViewHolder
 import org.oxycblt.auxio.list.recycler.FastScrollRecyclerView
 import org.oxycblt.auxio.list.sort.Sort
@@ -62,7 +67,8 @@ class ArtistListFragment :
     override val listModel: ListViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
-    private val artistAdapter = ArtistAdapter(this)
+    @Inject lateinit var homeSettings: HomeSettings
+    private var artistAdapter: ArtistAdapter? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentHomeListBinding.inflate(inflater)
@@ -70,11 +76,18 @@ class ArtistListFragment :
     override fun onBindingCreated(binding: FragmentHomeListBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
 
+        val layout = homeSettings.artistBrowserLayout
+        val adapter = ArtistAdapter(this, layout != BrowserLayout.LIST)
+        artistAdapter = adapter
+
         binding.homeRecycler.apply {
             id = R.id.home_artist_recycler
-            adapter = artistAdapter
+            this.adapter = adapter
             popupProvider = this@ArtistListFragment
             listener = this@ArtistListFragment
+            if (layout != BrowserLayout.LIST) {
+                (layoutManager as? GridLayoutManager)?.spanCount = layout.spanCount
+            }
         }
 
         binding.homeNoMusicPlaceholder.apply {
@@ -103,6 +116,7 @@ class ArtistListFragment :
             popupProvider = null
             listener = null
         }
+        artistAdapter = null
     }
 
     override fun getPopupData(pos: Int): FastScrollRecyclerView.PopupProvider.PopupData? {
@@ -143,7 +157,7 @@ class ArtistListFragment :
     }
 
     private fun updateArtists(artists: List<Artist>) {
-        artistAdapter.update(artists, homeModel.artistInstructions.consume())
+        artistAdapter?.update(artists, homeModel.artistInstructions.consume())
     }
 
     private fun updateNoMusicIndicator(empty: Boolean, indexingState: IndexingState?) {
@@ -155,29 +169,39 @@ class ArtistListFragment :
     }
 
     private fun updateSelection(selection: List<Music>) {
-        artistAdapter.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
+        artistAdapter?.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
     }
 
     private fun updatePlayback(song: Song?, parent: MusicParent?, isPlaying: Boolean) {
-        // Only highlight the artist if it is currently playing, and if the currently
-        // playing song is also contained within.
         val artist = (parent as? Artist)?.takeIf { song?.run { artists.contains(it) } ?: false }
-        artistAdapter.setPlaying(artist, isPlaying)
+        artistAdapter?.setPlaying(artist, isPlaying)
     }
 
-    /**
-     * A [SelectionIndicatorAdapter] that shows a list of [Artist]s using [ArtistViewHolder].
-     *
-     * @param listener An [SelectableListListener] to bind interactions to.
-     */
-    private class ArtistAdapter(private val listener: SelectableListListener<Artist>) :
-        SelectionIndicatorAdapter<Artist, ArtistViewHolder>(ArtistViewHolder.DIFF_CALLBACK) {
+    private class ArtistAdapter(
+        private val listener: SelectableListListener<Artist>,
+        private val isGrid: Boolean,
+    ) : SelectionIndicatorAdapter<Artist, SelectionIndicatorAdapter.ViewHolder>(
+            ArtistViewHolder.DIFF_CALLBACK,
+        ) {
+
+        override fun getItemViewType(position: Int) =
+            if (isGrid) ArtistGridViewHolder.VIEW_TYPE else ArtistViewHolder.VIEW_TYPE
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            ArtistViewHolder.from(parent)
+            if (viewType == ArtistGridViewHolder.VIEW_TYPE) {
+                ArtistGridViewHolder.from(parent)
+            } else {
+                ArtistViewHolder.from(parent)
+            }
 
-        override fun onBindViewHolder(holder: ArtistViewHolder, position: Int) {
-            holder.bind(getItem(position), listener)
+        override fun onBindViewHolder(
+            holder: SelectionIndicatorAdapter.ViewHolder,
+            position: Int,
+        ) {
+            when (holder) {
+                is ArtistGridViewHolder -> holder.bind(getItem(position), listener)
+                is ArtistViewHolder -> holder.bind(getItem(position), listener)
+            }
         }
     }
 }

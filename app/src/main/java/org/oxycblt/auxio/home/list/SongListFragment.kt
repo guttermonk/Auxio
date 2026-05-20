@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package org.oxycblt.auxio.home.list
 
 import android.os.Bundle
@@ -24,16 +24,21 @@ import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.GridLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentHomeListBinding
+import org.oxycblt.auxio.home.BrowserLayout
+import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.recycler.FastScrollRecyclerView
+import org.oxycblt.auxio.list.recycler.SongGridViewHolder
 import org.oxycblt.auxio.list.recycler.SongViewHolder
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.IndexingState
@@ -59,7 +64,8 @@ class SongListFragment :
     override val listModel: ListViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
-    private val songAdapter = SongAdapter(this)
+    @Inject lateinit var homeSettings: HomeSettings
+    private var songAdapter: SongAdapter? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentHomeListBinding.inflate(inflater)
@@ -67,11 +73,18 @@ class SongListFragment :
     override fun onBindingCreated(binding: FragmentHomeListBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
 
+        val layout = homeSettings.songBrowserLayout
+        val adapter = SongAdapter(this, layout != BrowserLayout.LIST)
+        songAdapter = adapter
+
         binding.homeRecycler.apply {
             id = R.id.home_song_recycler
-            adapter = songAdapter
+            this.adapter = adapter
             popupProvider = this@SongListFragment
             listener = this@SongListFragment
+            if (layout != BrowserLayout.LIST) {
+                (layoutManager as? GridLayoutManager)?.spanCount = layout.spanCount
+            }
         }
 
         binding.homeNoMusicPlaceholder.apply {
@@ -100,6 +113,7 @@ class SongListFragment :
             popupProvider = null
             listener = null
         }
+        songAdapter = null
     }
 
     override fun getPopupData(pos: Int): FastScrollRecyclerView.PopupProvider.PopupData? {
@@ -161,7 +175,7 @@ class SongListFragment :
     }
 
     private fun updateSongs(songs: List<Song>) {
-        songAdapter.update(songs, homeModel.songInstructions.consume())
+        songAdapter?.update(songs, homeModel.songInstructions.consume())
     }
 
     private fun updateNoMusicIndicator(empty: Boolean, indexingState: IndexingState?) {
@@ -173,27 +187,39 @@ class SongListFragment :
     }
 
     private fun updateSelection(selection: List<Music>) {
-        songAdapter.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
+        songAdapter?.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
     }
 
     private fun updatePlayback(song: Song?, parent: MusicParent?, isPlaying: Boolean) {
         // Only indicate playback that is from all songs
-        songAdapter.setPlaying(song.takeIf { parent == null }, isPlaying)
+        songAdapter?.setPlaying(song.takeIf { parent == null }, isPlaying)
     }
 
-    /**
-     * A [SelectionIndicatorAdapter] that shows a list of [Song]s using [SongViewHolder].
-     *
-     * @param listener An [SelectableListListener] to bind interactions to.
-     */
-    private class SongAdapter(private val listener: SelectableListListener<Song>) :
-        SelectionIndicatorAdapter<Song, SongViewHolder>(SongViewHolder.DIFF_CALLBACK) {
+    private class SongAdapter(
+        private val listener: SelectableListListener<Song>,
+        private val isGrid: Boolean,
+    ) : SelectionIndicatorAdapter<Song, SelectionIndicatorAdapter.ViewHolder>(
+            SongViewHolder.DIFF_CALLBACK,
+        ) {
+
+        override fun getItemViewType(position: Int) =
+            if (isGrid) SongGridViewHolder.VIEW_TYPE else SongViewHolder.VIEW_TYPE
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            SongViewHolder.from(parent)
+            if (viewType == SongGridViewHolder.VIEW_TYPE) {
+                SongGridViewHolder.from(parent)
+            } else {
+                SongViewHolder.from(parent)
+            }
 
-        override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
-            holder.bind(getItem(position), listener)
+        override fun onBindViewHolder(
+            holder: SelectionIndicatorAdapter.ViewHolder,
+            position: Int,
+        ) {
+            when (holder) {
+                is SongGridViewHolder -> holder.bind(getItem(position), listener)
+                is SongViewHolder -> holder.bind(getItem(position), listener)
+            }
         }
     }
 }

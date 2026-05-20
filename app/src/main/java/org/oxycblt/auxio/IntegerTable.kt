@@ -55,6 +55,16 @@ object IntegerTable {
     const val VIEW_TYPE_EDIT_HEADER = 0xA00D
     /** PlaylistSongViewHolder */
     const val VIEW_TYPE_PLAYLIST_SONG = 0xA00E
+    /** SongGridViewHolder */
+    const val VIEW_TYPE_SONG_GRID = 0xA00F
+    /** AlbumGridViewHolder */
+    const val VIEW_TYPE_ALBUM_GRID = 0xA010
+    /** ArtistGridViewHolder */
+    const val VIEW_TYPE_ARTIST_GRID = 0xA011
+    /** GenreGridViewHolder */
+    const val VIEW_TYPE_GENRE_GRID = 0xA012
+    /** PlaylistGridViewHolder */
+    const val VIEW_TYPE_PLAYLIST_GRID = 0xA013
     /** "Music playback" notification code */
     const val PLAYBACK_NOTIFICATION_CODE = 0xA0A0
     /** "Music loading" notification code */
@@ -153,4 +163,12 @@ object IntegerTable {
     const val FILTER_MODE_INCLUDE = 0xA129
     /** LocationMode.FileSystem */
     const val FILTER_MODE_EXCLUDE = 0xA12A
+    /** BrowserLayout.LIST */
+    const val BROWSER_LAYOUT_LIST = 0xA12B
+    /** BrowserLayout.SMALL_GRID */
+    const val BROWSER_LAYOUT_SMALL_GRID = 0xA12C
+    /** BrowserLayout.MEDIUM_GRID */
+    const val BROWSER_LAYOUT_MEDIUM_GRID = 0xA12D
+    /** BrowserLayout.LARGE_GRID */
+    const val BROWSER_LAYOUT_LARGE_GRID = 0xA12E
 }

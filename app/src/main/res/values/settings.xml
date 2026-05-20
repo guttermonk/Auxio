@@ -63,6 +63,12 @@
 
     <string name="set_key_library_revision" translatable="false">auxio_library_revision</string>
 
+    <string name="set_key_song_browser_layout" translatable="false">auxio_song_browser_layout</string>
+    <string name="set_key_album_browser_layout" translatable="false">auxio_album_browser_layout</string>
+    <string name="set_key_artist_browser_layout" translatable="false">auxio_artist_browser_layout</string>
+    <string name="set_key_genre_browser_layout" translatable="false">auxio_genre_browser_layout</string>
+    <string name="set_key_playlist_browser_layout" translatable="false">auxio_playlist_browser_layout</string>
+
     <string name="set_key_force_reload_workaround" translatable="false">auxio_force_reload</string>
 
     <string-array name="entries_theme">
@@ -178,6 +184,25 @@
     <integer name="action_mode_next">0xA119</integer>
     <integer name="action_mode_repeat">0xA11A</integer>
     <integer name="action_mode_shuffle">0xA11B</integer>
+
+    <integer name="browser_layout_list">0xA12B</integer>
+    <integer name="browser_layout_small_grid">0xA12C</integer>
+    <integer name="browser_layout_medium_grid">0xA12D</integer>
+    <integer name="browser_layout_large_grid">0xA12E</integer>
+
+    <string-array name="entries_browser_layout">
+        <item>@string/set_browser_layout_list</item>
+        <item>@string/set_browser_layout_small_grid</item>
+        <item>@string/set_browser_layout_medium_grid</item>
+        <item>@string/set_browser_layout_large_grid</item>
+    </string-array>
+
+    <integer-array name="values_browser_layout">
+        <item>@integer/browser_layout_list</item>
+        <item>@integer/browser_layout_small_grid</item>
+        <item>@integer/browser_layout_medium_grid</item>
+        <item>@integer/browser_layout_large_grid</item>
+    </integer-array>
 
     <integer name="cover_mode_off">0xA11C</integer>
     <integer name="cover_mode_save_space">0xA125</integer>

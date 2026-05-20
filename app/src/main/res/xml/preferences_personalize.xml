@@ -19,6 +19,66 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/set_song_browser">
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/browser_layout_list"
+            app:entries="@array/entries_browser_layout"
+            app:entryValues="@array/values_browser_layout"
+            app:key="@string/set_key_song_browser_layout"
+            app:title="@string/set_browser_layout"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/set_album_browser">
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/browser_layout_list"
+            app:entries="@array/entries_browser_layout"
+            app:entryValues="@array/values_browser_layout"
+            app:key="@string/set_key_album_browser_layout"
+            app:title="@string/set_browser_layout"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/set_artist_browser">
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/browser_layout_list"
+            app:entries="@array/entries_browser_layout"
+            app:entryValues="@array/values_browser_layout"
+            app:key="@string/set_key_artist_browser_layout"
+            app:title="@string/set_browser_layout"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/set_genre_browser">
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/browser_layout_list"
+            app:entries="@array/entries_browser_layout"
+            app:entryValues="@array/values_browser_layout"
+            app:key="@string/set_key_genre_browser_layout"
+            app:title="@string/set_browser_layout"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/set_playlist_browser">
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/browser_layout_list"
+            app:entries="@array/entries_browser_layout"
+            app:entryValues="@array/values_browser_layout"
+            app:key="@string/set_key_playlist_browser_layout"
+            app:title="@string/set_browser_layout"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/set_behavior">
 
         <org.oxycblt.auxio.settings.ui.IntListPreference

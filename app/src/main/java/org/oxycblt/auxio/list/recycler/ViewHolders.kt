@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.divider.MaterialDivider
 import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.databinding.ItemGridBinding
 import org.oxycblt.auxio.databinding.ItemHeaderBinding
 import org.oxycblt.auxio.databinding.ItemParentBinding
 import org.oxycblt.auxio.databinding.ItemSongBinding
@@ -322,6 +323,145 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
                 override fun areContentsTheSame(oldItem: Playlist, newItem: Playlist) =
                     oldItem.name == newItem.name && oldItem.songs.size == newItem.songs.size
             }
+    }
+}
+
+class SongGridViewHolder private constructor(private val binding: ItemGridBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    fun bind(song: Song, listener: SelectableListListener<Song>) {
+        listener.bind(song, this)
+        binding.root.setOnLongClickListener {
+            listener.onOpenMenu(song)
+            true
+        }
+        binding.gridImage.bind(song)
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.gridImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_SONG_GRID
+
+        fun from(parent: View) = SongGridViewHolder(ItemGridBinding.inflate(parent.context.inflater))
+    }
+}
+
+class AlbumGridViewHolder private constructor(private val binding: ItemGridBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    fun bind(album: Album, listener: SelectableListListener<Album>) {
+        listener.bind(album, this)
+        binding.root.setOnLongClickListener {
+            listener.onOpenMenu(album)
+            true
+        }
+        binding.gridImage.bind(album)
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.gridImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_ALBUM_GRID
+
+        fun from(parent: View) =
+            AlbumGridViewHolder(ItemGridBinding.inflate(parent.context.inflater))
+    }
+}
+
+class ArtistGridViewHolder private constructor(private val binding: ItemGridBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    fun bind(artist: Artist, listener: SelectableListListener<Artist>) {
+        listener.bind(artist, this)
+        binding.root.setOnLongClickListener {
+            listener.onOpenMenu(artist)
+            true
+        }
+        binding.gridImage.bind(artist)
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.gridImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_ARTIST_GRID
+
+        fun from(parent: View) =
+            ArtistGridViewHolder(ItemGridBinding.inflate(parent.context.inflater))
+    }
+}
+
+class GenreGridViewHolder private constructor(private val binding: ItemGridBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    fun bind(genre: Genre, listener: SelectableListListener<Genre>) {
+        listener.bind(genre, this)
+        binding.root.setOnLongClickListener {
+            listener.onOpenMenu(genre)
+            true
+        }
+        binding.gridImage.bind(genre)
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.gridImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_GENRE_GRID
+
+        fun from(parent: View) =
+            GenreGridViewHolder(ItemGridBinding.inflate(parent.context.inflater))
+    }
+}
+
+class PlaylistGridViewHolder private constructor(private val binding: ItemGridBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    fun bind(playlist: Playlist, listener: SelectableListListener<Playlist>) {
+        listener.bind(playlist, this)
+        binding.root.setOnLongClickListener {
+            listener.onOpenMenu(playlist)
+            true
+        }
+        binding.gridImage.bind(playlist)
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.gridImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_PLAYLIST_GRID
+
+        fun from(parent: View) =
+            PlaylistGridViewHolder(ItemGridBinding.inflate(parent.context.inflater))
     }
 }
 

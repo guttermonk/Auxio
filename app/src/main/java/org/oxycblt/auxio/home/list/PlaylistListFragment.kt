@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package org.oxycblt.auxio.home.list
 
 import android.os.Bundle
@@ -24,15 +24,21 @@ import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.GridLayoutManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentHomeListBinding
 import org.oxycblt.auxio.detail.DetailViewModel
+import org.oxycblt.auxio.home.BrowserLayout
+import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.recycler.FastScrollRecyclerView
+import org.oxycblt.auxio.list.recycler.PlaylistGridViewHolder
 import org.oxycblt.auxio.list.recycler.PlaylistViewHolder
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.IndexingState
@@ -50,6 +56,7 @@ import org.oxycblt.musikr.Song
  *
  * @author Alexander Capehart (OxygenCobalt)
  */
+@AndroidEntryPoint
 class PlaylistListFragment :
     ListFragment<Playlist, FragmentHomeListBinding>(),
     FastScrollRecyclerView.PopupProvider,
@@ -59,7 +66,8 @@ class PlaylistListFragment :
     override val listModel: ListViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
-    private val playlistAdapter = PlaylistAdapter(this)
+    @Inject lateinit var homeSettings: HomeSettings
+    private var playlistAdapter: PlaylistAdapter? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentHomeListBinding.inflate(inflater)
@@ -67,11 +75,18 @@ class PlaylistListFragment :
     override fun onBindingCreated(binding: FragmentHomeListBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
 
+        val layout = homeSettings.playlistBrowserLayout
+        val adapter = PlaylistAdapter(this, layout != BrowserLayout.LIST)
+        playlistAdapter = adapter
+
         binding.homeRecycler.apply {
             id = R.id.home_playlist_recycler
-            adapter = playlistAdapter
+            this.adapter = adapter
             popupProvider = this@PlaylistListFragment
             listener = this@PlaylistListFragment
+            if (layout != BrowserLayout.LIST) {
+                (layoutManager as? GridLayoutManager)?.spanCount = layout.spanCount
+            }
         }
 
         binding.homeNoMusicPlaceholder.apply {
@@ -103,6 +118,7 @@ class PlaylistListFragment :
             popupProvider = null
             listener = null
         }
+        playlistAdapter = null
     }
 
     override fun getPopupData(pos: Int): FastScrollRecyclerView.PopupProvider.PopupData? {
@@ -141,7 +157,7 @@ class PlaylistListFragment :
     }
 
     private fun updatePlaylists(playlists: List<Playlist>) {
-        playlistAdapter.update(playlists, homeModel.playlistInstructions.consume())
+        playlistAdapter?.update(playlists, homeModel.playlistInstructions.consume())
     }
 
     private fun updateNoMusicIndicator(
@@ -165,28 +181,39 @@ class PlaylistListFragment :
     }
 
     private fun updateSelection(selection: List<Music>) {
-        playlistAdapter.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
+        playlistAdapter?.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
     }
 
     private fun updatePlayback(song: Song?, parent: MusicParent?, isPlaying: Boolean) {
-        // Only highlight the playlist if it is currently playing, and if the currently
-        // playing song is also contained within.
         val playlist = (parent as? Playlist)?.takeIf { it.songs.contains(song) }
-        playlistAdapter.setPlaying(playlist, isPlaying)
+        playlistAdapter?.setPlaying(playlist, isPlaying)
     }
 
-    /**
-     * A [SelectionIndicatorAdapter] that shows a list of [Playlist]s using [PlaylistViewHolder].
-     *
-     * @param listener An [SelectableListListener] to bind interactions to.
-     */
-    private class PlaylistAdapter(private val listener: SelectableListListener<Playlist>) :
-        SelectionIndicatorAdapter<Playlist, PlaylistViewHolder>(PlaylistViewHolder.DIFF_CALLBACK) {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            PlaylistViewHolder.from(parent)
+    private class PlaylistAdapter(
+        private val listener: SelectableListListener<Playlist>,
+        private val isGrid: Boolean,
+    ) : SelectionIndicatorAdapter<Playlist, SelectionIndicatorAdapter.ViewHolder>(
+            PlaylistViewHolder.DIFF_CALLBACK,
+        ) {
 
-        override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
-            holder.bind(getItem(position), listener)
+        override fun getItemViewType(position: Int) =
+            if (isGrid) PlaylistGridViewHolder.VIEW_TYPE else PlaylistViewHolder.VIEW_TYPE
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            if (viewType == PlaylistGridViewHolder.VIEW_TYPE) {
+                PlaylistGridViewHolder.from(parent)
+            } else {
+                PlaylistViewHolder.from(parent)
+            }
+
+        override fun onBindViewHolder(
+            holder: SelectionIndicatorAdapter.ViewHolder,
+            position: Int,
+        ) {
+            when (holder) {
+                is PlaylistGridViewHolder -> holder.bind(getItem(position), listener)
+                is PlaylistViewHolder -> holder.bind(getItem(position), listener)
+            }
         }
     }
 }

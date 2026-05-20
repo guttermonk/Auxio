@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package org.oxycblt.auxio.home.list
 
 import android.os.Bundle
@@ -24,18 +24,22 @@ import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.GridLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentHomeListBinding
 import org.oxycblt.auxio.detail.DetailViewModel
+import org.oxycblt.auxio.home.BrowserLayout
+import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.image.covers.CustomCoverStore
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
+import org.oxycblt.auxio.list.recycler.AlbumGridViewHolder
 import org.oxycblt.auxio.list.recycler.AlbumViewHolder
 import org.oxycblt.auxio.list.recycler.FastScrollRecyclerView
 import org.oxycblt.auxio.list.sort.Sort
@@ -65,9 +69,9 @@ class AlbumListFragment :
     override val listModel: ListViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
-    private val albumAdapter = AlbumAdapter(this)
-
+    @Inject lateinit var homeSettings: HomeSettings
     @Inject lateinit var customCoverStore: CustomCoverStore
+    private var albumAdapter: AlbumAdapter? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentHomeListBinding.inflate(inflater)
@@ -75,11 +79,18 @@ class AlbumListFragment :
     override fun onBindingCreated(binding: FragmentHomeListBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
 
+        val layout = homeSettings.albumBrowserLayout
+        val adapter = AlbumAdapter(this, layout != BrowserLayout.LIST)
+        albumAdapter = adapter
+
         binding.homeRecycler.apply {
             id = R.id.home_album_recycler
-            adapter = albumAdapter
+            this.adapter = adapter
             popupProvider = this@AlbumListFragment
             listener = this@AlbumListFragment
+            if (layout != BrowserLayout.LIST) {
+                (layoutManager as? GridLayoutManager)?.spanCount = layout.spanCount
+            }
         }
 
         binding.homeNoMusicPlaceholder.apply {
@@ -99,11 +110,9 @@ class AlbumListFragment :
             playbackModel.isPlaying,
             ::updatePlayback,
         )
-        // When the user saves or resets a custom cover, rebind that specific list item so
-        // the thumbnail updates immediately without requiring a full dataset reload.
         collect(customCoverStore.updates) { changedUid: Music.UID ->
             val pos = homeModel.albumList.value.indexOfFirst { it.uid == changedUid }
-            if (pos != -1) albumAdapter.notifyItemChanged(pos)
+            if (pos != -1) albumAdapter?.notifyItemChanged(pos)
         }
     }
 
@@ -114,6 +123,7 @@ class AlbumListFragment :
             popupProvider = null
             listener = null
         }
+        albumAdapter = null
     }
 
     override fun getPopupData(pos: Int): FastScrollRecyclerView.PopupProvider.PopupData? {
@@ -171,7 +181,7 @@ class AlbumListFragment :
     }
 
     private fun updateAlbums(albums: List<Album>) {
-        albumAdapter.update(albums, homeModel.albumInstructions.consume())
+        albumAdapter?.update(albums, homeModel.albumInstructions.consume())
     }
 
     private fun updateNoMusicIndicator(empty: Boolean, indexingState: IndexingState?) {
@@ -183,29 +193,39 @@ class AlbumListFragment :
     }
 
     private fun updateSelection(selection: List<Music>) {
-        albumAdapter.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
+        albumAdapter?.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
     }
 
     private fun updatePlayback(song: Song?, parent: MusicParent?, isPlaying: Boolean) {
-        // Only highlight the album if it is currently playing, and if the currently
-        // playing song is also contained within.
         val album = (parent as? Album)?.takeIf { song?.album == it }
-        albumAdapter.setPlaying(album, isPlaying)
+        albumAdapter?.setPlaying(album, isPlaying)
     }
 
-    /**
-     * A [SelectionIndicatorAdapter] that shows a list of [Album]s using [AlbumViewHolder].
-     *
-     * @param listener An [SelectableListListener] to bind interactions to.
-     */
-    private class AlbumAdapter(private val listener: SelectableListListener<Album>) :
-        SelectionIndicatorAdapter<Album, AlbumViewHolder>(AlbumViewHolder.DIFF_CALLBACK) {
+    private class AlbumAdapter(
+        private val listener: SelectableListListener<Album>,
+        private val isGrid: Boolean,
+    ) : SelectionIndicatorAdapter<Album, SelectionIndicatorAdapter.ViewHolder>(
+            AlbumViewHolder.DIFF_CALLBACK,
+        ) {
+
+        override fun getItemViewType(position: Int) =
+            if (isGrid) AlbumGridViewHolder.VIEW_TYPE else AlbumViewHolder.VIEW_TYPE
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            AlbumViewHolder.from(parent)
+            if (viewType == AlbumGridViewHolder.VIEW_TYPE) {
+                AlbumGridViewHolder.from(parent)
+            } else {
+                AlbumViewHolder.from(parent)
+            }
 
-        override fun onBindViewHolder(holder: AlbumViewHolder, position: Int) {
-            holder.bind(getItem(position), listener)
+        override fun onBindViewHolder(
+            holder: SelectionIndicatorAdapter.ViewHolder,
+            position: Int,
+        ) {
+            when (holder) {
+                is AlbumGridViewHolder -> holder.bind(getItem(position), listener)
+                is AlbumViewHolder -> holder.bind(getItem(position), listener)
+            }
         }
     }
 }

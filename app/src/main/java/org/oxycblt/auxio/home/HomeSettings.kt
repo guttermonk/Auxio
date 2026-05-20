@@ -22,6 +22,7 @@ import android.content.Context
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.home.tabs.Tab
 import org.oxycblt.auxio.music.MusicType
@@ -39,6 +40,16 @@ interface HomeSettings : Settings<HomeSettings.Listener> {
     var homeTabs: Array<Tab>
     /** Whether to hide artists considered "collaborators" from the home UI. */
     val shouldHideCollaborators: Boolean
+    /** The layout mode for the song browser tab. */
+    val songBrowserLayout: BrowserLayout
+    /** The layout mode for the album browser tab. */
+    val albumBrowserLayout: BrowserLayout
+    /** The layout mode for the artist browser tab. */
+    val artistBrowserLayout: BrowserLayout
+    /** The layout mode for the genre browser tab. */
+    val genreBrowserLayout: BrowserLayout
+    /** The layout mode for the playlist browser tab. */
+    val playlistBrowserLayout: BrowserLayout
 
     interface Listener {
         /** Called when the [homeTabs] configuration changes. */
@@ -46,6 +57,9 @@ interface HomeSettings : Settings<HomeSettings.Listener> {
 
         /** Called when the [shouldHideCollaborators] configuration changes. */
         fun onHideCollaboratorsChanged() {}
+
+        /** Called when any browser layout configuration changes. */
+        fun onBrowserLayoutChanged() {}
     }
 }
 
@@ -68,6 +82,51 @@ class HomeSettingsImpl @Inject constructor(@ApplicationContext context: Context)
 
     override val shouldHideCollaborators: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_hide_collaborators), false)
+
+    override val songBrowserLayout: BrowserLayout
+        get() =
+            BrowserLayout.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_song_browser_layout),
+                    IntegerTable.BROWSER_LAYOUT_LIST,
+                )
+            )
+
+    override val albumBrowserLayout: BrowserLayout
+        get() =
+            BrowserLayout.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_album_browser_layout),
+                    IntegerTable.BROWSER_LAYOUT_LIST,
+                )
+            )
+
+    override val artistBrowserLayout: BrowserLayout
+        get() =
+            BrowserLayout.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_artist_browser_layout),
+                    IntegerTable.BROWSER_LAYOUT_LIST,
+                )
+            )
+
+    override val genreBrowserLayout: BrowserLayout
+        get() =
+            BrowserLayout.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_genre_browser_layout),
+                    IntegerTable.BROWSER_LAYOUT_LIST,
+                )
+            )
+
+    override val playlistBrowserLayout: BrowserLayout
+        get() =
+            BrowserLayout.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_playlist_browser_layout),
+                    IntegerTable.BROWSER_LAYOUT_LIST,
+                )
+            )
 
     override fun migrate() {
         if (sharedPreferences.contains(OLD_KEY_LIB_TABS)) {
@@ -99,6 +158,14 @@ class HomeSettingsImpl @Inject constructor(@ApplicationContext context: Context)
             getString(R.string.set_key_hide_collaborators) -> {
                 L.d("Dispatching collaborator setting change")
                 listener.onHideCollaboratorsChanged()
+            }
+            getString(R.string.set_key_song_browser_layout),
+            getString(R.string.set_key_album_browser_layout),
+            getString(R.string.set_key_artist_browser_layout),
+            getString(R.string.set_key_genre_browser_layout),
+            getString(R.string.set_key_playlist_browser_layout) -> {
+                L.d("Dispatching browser layout change")
+                listener.onBrowserLayoutChanged()
             }
         }
     }
