@@ -245,7 +245,7 @@ constructor(
             val h = opts.outHeight
             if (w > 0 && h > 0) {
                 val ratio = w.toFloat() / h.toFloat()
-                if (ratio < 0.75f || ratio > 1.33f) {
+                if (ratio < 0.9f || ratio > 1.1f) {
                     L.d("Thumbnail not square enough (${w}x$h, ratio=$ratio): $url")
                     file.delete()
                     return null
