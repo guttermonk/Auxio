@@ -440,11 +440,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         // For artists we both engage in circle cropping but also arrange them
         // in a "smattering" of random rotation/tilt to give the feeling of a messy
         // stack of vinyl.
-        val covers =
-            coversWithCustomFallback(
-                artist.covers,
-                artist.explicitAlbums + artist.implicitAlbums,
-            )
+        val covers = coversWithCustomFallback(artist.covers, artist.explicitAlbums + artist.implicitAlbums)
         bindImpl(
             { size ->
                 SmatteringCoverComposition(
@@ -468,8 +464,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
     fun bind(genre: Genre) {
         // Genres are organized like a "gallery" of various covers that overlap eachother,
         // as if they were framed on a wall.
-        val covers =
-            coversWithCustomFallback(genre.covers, genre.songs.map { it.album }.distinct())
+        val covers = coversWithCustomFallback(genre.covers, genre.songs.map { it.album }.distinct())
         bindImpl(
             { size ->
                 GalleryCoverCollection(
