@@ -55,6 +55,8 @@ import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.RelativeCornerSize
 import com.google.android.material.shape.ShapeAppearanceModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import java.io.InputStream
 import javax.inject.Inject
 import kotlin.math.min
 import org.oxycblt.auxio.R
@@ -76,6 +78,7 @@ import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
+import org.oxycblt.musikr.covers.Cover
 import org.oxycblt.musikr.covers.CoverCollection
 
 /**
@@ -437,10 +440,15 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         // For artists we both engage in circle cropping but also arrange them
         // in a "smattering" of random rotation/tilt to give the feeling of a messy
         // stack of vinyl.
+        val covers =
+            coversWithCustomFallback(
+                artist.covers,
+                artist.explicitAlbums + artist.implicitAlbums,
+            )
         bindImpl(
             { size ->
                 SmatteringCoverComposition(
-                    artist.covers,
+                    covers,
                     responsiveCornerRatio(size),
                     artist.uid.toString().hashCode(),
                     backgroundColor(),
@@ -457,13 +465,15 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
      *
      * @param genre The [Genre] to bind to the view.
      */
-    fun bind(genre: Genre) =
+    fun bind(genre: Genre) {
         // Genres are organized like a "gallery" of various covers that overlap eachother,
         // as if they were framed on a wall.
+        val covers =
+            coversWithCustomFallback(genre.covers, genre.songs.map { it.album }.distinct())
         bindImpl(
             { size ->
                 GalleryCoverCollection(
-                    genre.covers,
+                    covers,
                     genre.uid.toString().hashCode(),
                     responsiveCornerRatio(size),
                     backgroundColor(),
@@ -473,19 +483,22 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             R.drawable.ic_genre_24,
             squareishShapeAppearance,
         )
+    }
 
     /**
      * Bind a [Playlist]'s image to this view.
      *
      * @param playlist the [Playlist] to bind.
      */
-    fun bind(playlist: Playlist) =
+    fun bind(playlist: Playlist) {
         // Playlists are organized in a straight diagonal stack to give the appearance of an
         // "orderly" pile of covers.
+        val albums = playlist.songs.map { it.album }.distinct()
+        val covers = coversWithCustomFallback(playlist.covers, albums)
         bindImpl(
             { size ->
                 StackCoverComposition(
-                    playlist.covers,
+                    covers,
                     responsiveCornerRatio(size),
                     playlist.uid.toString().hashCode(),
                     backgroundColor(),
@@ -495,6 +508,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             R.drawable.ic_playlist_24,
             squareishShapeAppearance,
         )
+    }
 
     /**
      * Bind the covers of a generic list of [Song]s.
@@ -523,6 +537,22 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             errorRes,
             squareishShapeAppearance,
         )
+
+    private fun coversWithCustomFallback(
+        covers: CoverCollection,
+        albums: Collection<Album>,
+    ): CoverCollection {
+        if (covers.covers.isNotEmpty()) return covers
+        val customCovers =
+            albums
+                .filter { !customCoverStore.isCleared(it.uid) }
+                .mapNotNull { album ->
+                    val file = customCoverStore.fileFor(album.uid)
+                    if (file.exists()) FileCover(file) else null
+                }
+        if (customCovers.isEmpty()) return covers
+        return CoverCollection.from(customCovers)
+    }
 
     private fun bindImpl(
         img: (Size) -> Any?,
@@ -676,4 +706,19 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
 
         override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
     }
+}
+
+private class FileCover(private val file: File) : Cover {
+    override val id: String = file.absolutePath
+
+    override suspend fun open(): InputStream? =
+        try {
+            file.inputStream()
+        } catch (_: Exception) {
+            null
+        }
+
+    override fun equals(other: Any?) = other is FileCover && id == other.id
+
+    override fun hashCode() = id.hashCode()
 }
