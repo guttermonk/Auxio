@@ -107,12 +107,21 @@ constructor(
             changed[FieldKey.ALBUM_ARTIST] = fields.albumArtist
         if (fields.year != (original?.year ?: "")) changed[FieldKey.YEAR] = fields.year
         if (fields.genre != (original?.genre ?: "")) changed[FieldKey.GENRE] = fields.genre
-        if (changed.isEmpty()) {
-            _saveResult.put(true)
-            return
-        }
         _isLoading.value = true
         viewModelScope.launch {
+            // Check for differing MusicBrainz Album IDs — if they differ, clear them
+            // so album grouping falls back to name+artist matching.
+            val mbids = songs.map { tagEditorService.readMusicBrainzAlbumId(it.uri, it.path.name) }
+            val distinctMbids = mbids.filterNotNull().distinct()
+            if (distinctMbids.size > 1) {
+                L.d("Differing MBIDs found ($distinctMbids), clearing them")
+                changed[FieldKey.MUSICBRAINZ_RELEASEID] = ""
+            }
+            if (changed.isEmpty()) {
+                _isLoading.value = false
+                _saveResult.put(true)
+                return@launch
+            }
             var allSuccess = true
             for (song in songs) {
                 val success = tagEditorService.writePartialTags(song.uri, song.path.name, changed)

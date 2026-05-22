@@ -140,6 +140,21 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             }
         }
 
+    suspend fun readMusicBrainzAlbumId(uri: Uri, fileName: String?): String? =
+        withContext(Dispatchers.IO) {
+            val tempFile = copyToTemp(uri, fileName) ?: return@withContext null
+            try {
+                val audioFile = AudioFileIO.read(tempFile)
+                val tag = audioFile.tag ?: return@withContext null
+                tag.getFirst(FieldKey.MUSICBRAINZ_RELEASEID).takeIf { it.isNotEmpty() }
+            } catch (e: Exception) {
+                L.e(e, "Failed to read MBID from $uri")
+                null
+            } finally {
+                tempFile.delete()
+            }
+        }
+
     suspend fun writeCoverArt(songUri: Uri, fileName: String?, coverFile: File): Boolean =
         withContext(Dispatchers.IO) {
             val tempFile = copyToTemp(songUri, fileName) ?: return@withContext false
