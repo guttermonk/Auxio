@@ -155,6 +155,23 @@ class TagEditorService @Inject constructor(@ApplicationContext private val conte
             }
         }
 
+    suspend fun stripCoverArt(songUri: Uri, fileName: String?): Boolean =
+        withContext(Dispatchers.IO) {
+            val tempFile = copyToTemp(songUri, fileName) ?: return@withContext false
+            try {
+                val audioFile = AudioFileIO.read(tempFile)
+                val tag = audioFile.tag ?: return@withContext true
+                tag.deleteArtworkField()
+                audioFile.commit()
+                copyBack(tempFile, songUri) == null
+            } catch (e: Exception) {
+                L.e(e, "Failed to strip cover art from $songUri")
+                false
+            } finally {
+                tempFile.delete()
+            }
+        }
+
     suspend fun writeCoverArt(songUri: Uri, fileName: String?, coverFile: File): Boolean =
         withContext(Dispatchers.IO) {
             val tempFile = copyToTemp(songUri, fileName) ?: return@withContext false

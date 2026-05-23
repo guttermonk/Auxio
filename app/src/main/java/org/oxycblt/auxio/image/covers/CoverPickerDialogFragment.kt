@@ -224,7 +224,7 @@ class CoverPickerDialogFragment :
         if (success) {
             requireContext()
                 .showToast(
-                    if (pickerModel.hasCustomCover.value) R.string.lng_cover_saved
+                    if (pickerModel.hasCoverArt.value) R.string.lng_cover_saved
                     else R.string.lng_cover_cleared
                 )
             // Pop both the cover picker and the album menu dialog so the user lands back

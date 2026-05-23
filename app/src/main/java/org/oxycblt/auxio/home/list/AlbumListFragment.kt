@@ -34,7 +34,6 @@ import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.home.BrowserLayout
 import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.home.HomeViewModel
-import org.oxycblt.auxio.image.covers.CustomCoverStore
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.SelectableListListener
@@ -47,7 +46,6 @@ import org.oxycblt.auxio.music.IndexingState
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMsPopup
-import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Music
@@ -70,7 +68,6 @@ class AlbumListFragment :
     override val musicModel: MusicViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
     @Inject lateinit var homeSettings: HomeSettings
-    @Inject lateinit var customCoverStore: CustomCoverStore
     private var albumAdapter: AlbumAdapter? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
@@ -110,10 +107,6 @@ class AlbumListFragment :
             playbackModel.isPlaying,
             ::updatePlayback,
         )
-        collect(customCoverStore.updates) { changedUid: Music.UID ->
-            val pos = homeModel.albumList.value.indexOfFirst { it.uid == changedUid }
-            if (pos != -1) albumAdapter?.notifyItemChanged(pos)
-        }
     }
 
     override fun onDestroyBinding(binding: FragmentHomeListBinding) {

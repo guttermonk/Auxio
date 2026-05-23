@@ -47,7 +47,7 @@ import timber.log.Timber as L
 
 /**
  * Drives the [CoverPickerDialogFragment]. Resolves the album from the music library, builds the
- * list of picker items, and delegates save/reset operations to [CustomCoverStore].
+ * list of picker items, and embeds chosen cover art directly into the album's audio files.
  */
 @HiltViewModel
 class CoverPickerViewModel
@@ -55,7 +55,6 @@ class CoverPickerViewModel
 constructor(
     @ApplicationContext private val context: Context,
     private val musicRepository: MusicRepository,
-    private val customCoverStore: CustomCoverStore,
     private val tagEditorService: TagEditorService,
 ) : ViewModel(), MusicRepository.UpdateListener {
 
@@ -67,9 +66,9 @@ constructor(
     /** The complete ordered list of items for the picker RecyclerView. */
     val pickerItems: StateFlow<List<CoverPickerItem>> = _pickerItems
 
-    private val _hasCustomCover = MutableStateFlow(false)
-    /** Whether the album currently has a user-chosen custom cover applied. */
-    val hasCustomCover: StateFlow<Boolean> = _hasCustomCover
+    private val _hasCoverArt = MutableStateFlow(false)
+    /** Whether the album currently has any embedded cover art. */
+    val hasCoverArt: StateFlow<Boolean> = _hasCoverArt
 
     private val _saveResult = MutableEvent<Boolean>()
     /**
@@ -108,26 +107,27 @@ constructor(
             return
         }
         _currentAlbum.value = album
-        _hasCustomCover.value = customCoverStore.has(uid)
+        _hasCoverArt.value = album.covers.covers.isNotEmpty()
         onlineResults = emptyList()
         isSearchingOnline = true
         _pickerItems.value = buildItems(album)
         searchOnlineCovers(album)
     }
 
-    /**
-     * Persist the image at [uri] as the custom cover for the current album. Emits the result via
-     * [saveResult].
-     */
+    /** Embed the image at [uri] into all songs in the current album. */
     fun saveCover(uri: Uri) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
-            val success = customCoverStore.save(album.uid, uri)
+            val coverFile = saveUriToTemp(uri)
+            if (coverFile == null) {
+                _saveResult.put(false)
+                return@launch
+            }
+            val success = embedCoverInSongs(album, coverFile)
+            coverFile.delete()
             if (success) {
-                customCoverStore.markPermanent(album.uid)
-                _hasCustomCover.value = true
+                _hasCoverArt.value = true
                 _pickerItems.value = buildItems(album)
-                embedCoverInSongs(album)
             }
             _saveResult.put(success)
         }
@@ -136,12 +136,16 @@ constructor(
     fun saveCoverFromLibrary(item: CoverPickerItem.CoverOption) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
-            val success = customCoverStore.saveFromCover(album.uid, item.cover)
+            val coverFile = saveCoverToTemp(item.cover)
+            if (coverFile == null) {
+                _saveResult.put(false)
+                return@launch
+            }
+            val success = embedCoverInSongs(album, coverFile)
+            coverFile.delete()
             if (success) {
-                customCoverStore.markPermanent(album.uid)
-                _hasCustomCover.value = true
+                _hasCoverArt.value = true
                 _pickerItems.value = buildItems(album)
-                embedCoverInSongs(album)
             }
             _saveResult.put(success)
         }
@@ -150,12 +154,16 @@ constructor(
     fun saveOnlineCover(item: CoverPickerItem.OnlineCoverOption) {
         val album = _currentAlbum.value ?: return
         viewModelScope.launch {
-            val success = customCoverStore.saveFromUrl(album.uid, item.fullUrl)
+            val coverFile = downloadToTemp(item.fullUrl)
+            if (coverFile == null) {
+                _saveResult.put(false)
+                return@launch
+            }
+            val success = embedCoverInSongs(album, coverFile)
+            coverFile.delete()
             if (success) {
-                customCoverStore.markPermanent(album.uid)
-                _hasCustomCover.value = true
+                _hasCoverArt.value = true
                 _pickerItems.value = buildItems(album)
-                embedCoverInSongs(album)
             }
             _saveResult.put(success)
         }
@@ -163,25 +171,93 @@ constructor(
 
     fun clearCover() {
         val album = _currentAlbum.value ?: return
-        customCoverStore.markCleared(album.uid)
-        _hasCustomCover.value = false
-        _pickerItems.value = buildItems(album)
-        _saveResult.put(true)
+        viewModelScope.launch {
+            val success = stripCoverFromSongs(album)
+            if (success) {
+                _hasCoverArt.value = false
+                _pickerItems.value = buildItems(album)
+            }
+            _saveResult.put(success)
+        }
     }
 
     // -----------------------------------------------------------------------
     // Internal helpers
     // -----------------------------------------------------------------------
 
-    private suspend fun embedCoverInSongs(album: Album) {
-        val coverFile = customCoverStore.fileFor(album.uid)
-        if (!coverFile.exists()) return
+    private suspend fun embedCoverInSongs(album: Album, coverFile: File): Boolean {
+        var allSuccess = true
         for (song in album.songs) {
             val ok = tagEditorService.writeCoverArt(song.uri, song.path.name, coverFile)
-            if (!ok) L.w("Failed to embed cover art in ${song.path.name}")
+            if (!ok) {
+                L.w("Failed to embed cover art in ${song.path.name}")
+                allSuccess = false
+            }
         }
         L.d("Embedded cover art in ${album.songs.size} songs")
+        return allSuccess
     }
+
+    private suspend fun stripCoverFromSongs(album: Album): Boolean {
+        var allSuccess = true
+        for (song in album.songs) {
+            val ok = tagEditorService.stripCoverArt(song.uri, song.path.name)
+            if (!ok) {
+                L.w("Failed to strip cover art from ${song.path.name}")
+                allSuccess = false
+            }
+        }
+        L.d("Stripped cover art from ${album.songs.size} songs")
+        return allSuccess
+    }
+
+    private suspend fun saveUriToTemp(uri: Uri): File? =
+        withContext(Dispatchers.IO) {
+            try {
+                val file = File(context.cacheDir, "auxio_cover_embed_temp")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                    ?: return@withContext null
+                file
+            } catch (e: Exception) {
+                L.e(e, "Failed to save URI to temp file")
+                null
+            }
+        }
+
+    private suspend fun saveCoverToTemp(cover: org.oxycblt.musikr.covers.Cover): File? =
+        withContext(Dispatchers.IO) {
+            try {
+                val file = File(context.cacheDir, "auxio_cover_embed_temp")
+                cover.open()?.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                    ?: return@withContext null
+                file
+            } catch (e: Exception) {
+                L.e(e, "Failed to save cover to temp file")
+                null
+            }
+        }
+
+    private suspend fun downloadToTemp(url: String): File? =
+        withContext(Dispatchers.IO) {
+            try {
+                val file = File(context.cacheDir, "auxio_cover_embed_temp")
+                val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                conn.connectTimeout = 15_000
+                conn.readTimeout = 60_000
+                conn.instanceFollowRedirects = true
+                conn.inputStream.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                file
+            } catch (e: Exception) {
+                L.e(e, "Failed to download cover to temp file")
+                null
+            }
+        }
 
     private fun searchOnlineCovers(album: Album) {
         val albumName = album.name.resolve(context)
@@ -280,7 +356,7 @@ constructor(
                 CoverPickerItem.ACTION_SEARCH,
             )
         )
-        if (_hasCustomCover.value) {
+        if (_hasCoverArt.value) {
             add(
                 CoverPickerItem.ActionItem(
                     R.drawable.ic_delete_24,
