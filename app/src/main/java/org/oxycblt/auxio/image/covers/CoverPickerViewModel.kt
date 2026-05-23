@@ -217,8 +217,7 @@ constructor(
                 val file = File(context.cacheDir, "auxio_cover_embed_temp")
                 context.contentResolver.openInputStream(uri)?.use { input ->
                     file.outputStream().use { output -> input.copyTo(output) }
-                }
-                    ?: return@withContext null
+                } ?: return@withContext null
                 file
             } catch (e: Exception) {
                 L.e(e, "Failed to save URI to temp file")
@@ -232,8 +231,7 @@ constructor(
                 val file = File(context.cacheDir, "auxio_cover_embed_temp")
                 cover.open()?.use { input ->
                     file.outputStream().use { output -> input.copyTo(output) }
-                }
-                    ?: return@withContext null
+                } ?: return@withContext null
                 file
             } catch (e: Exception) {
                 L.e(e, "Failed to save cover to temp file")
