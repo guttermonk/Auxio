@@ -18,12 +18,16 @@
  
 package org.oxycblt.auxio.image.covers
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.widget.ImageView
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
@@ -71,6 +75,17 @@ class CoverPickerDialogFragment :
             if (uri != null) {
                 L.d("Gallery image selected: $uri")
                 showConfirmDialog(newCoverUri = uri) { pickerModel.saveCover(uri) }
+            }
+        }
+
+    private var pendingSave: (() -> Unit)? = null
+
+    private val writePermLauncher =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            val save = pendingSave
+            pendingSave = null
+            if (result.resultCode == Activity.RESULT_OK && save != null) {
+                save()
             }
         }
 
@@ -139,6 +154,18 @@ class CoverPickerDialogFragment :
     // Private helpers
     // -----------------------------------------------------------------------
 
+    private fun requestWriteAndSave(save: () -> Unit) {
+        val album = pickerModel.currentAlbum.value ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            pendingSave = save
+            val uris = album.songs.map { it.uri }
+            val request = MediaStore.createWriteRequest(requireContext().contentResolver, uris)
+            writePermLauncher.launch(IntentSenderRequest.Builder(request).build())
+        } else {
+            save()
+        }
+    }
+
     private fun showConfirmDialog(
         newCoverUri: Uri? = null,
         newCoverFile: java.io.File? = null,
@@ -167,7 +194,7 @@ class CoverPickerDialogFragment :
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.lbl_change_cover)
             .setView(view)
-            .setPositiveButton(R.string.lbl_replace_cover) { _, _ -> onSave() }
+            .setPositiveButton(R.string.lbl_replace_cover) { _, _ -> requestWriteAndSave(onSave) }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
@@ -196,7 +223,9 @@ class CoverPickerDialogFragment :
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.lbl_clear_cover)
             .setMessage(R.string.lng_clear_cover_confirm)
-            .setPositiveButton(R.string.lbl_clear) { _, _ -> pickerModel.clearCover() }
+            .setPositiveButton(R.string.lbl_clear) { _, _ ->
+                requestWriteAndSave { pickerModel.clearCover() }
+            }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
