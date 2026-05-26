@@ -55,11 +55,10 @@ import org.oxycblt.musikr.Album
 import timber.log.Timber as L
 
 /**
- * A bottom-sheet dialog that lets the user choose a custom album cover from:
- * - Artwork already embedded in the album's tracks (shown as a thumbnail grid)
+ * A bottom-sheet dialog that lets the user choose album cover art from:
  * - The device's photo/file gallery (system picker)
  * - An online image search (DuckDuckGo, browser intent — no data leaves the app)
- * - A "Reset to default" action when a custom cover is already applied
+ * - A "Clear" action to strip embedded cover art from all tracks
  */
 @AndroidEntryPoint
 class CoverPickerDialogFragment :
