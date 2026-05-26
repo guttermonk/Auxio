@@ -348,7 +348,14 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
      */
     fun bind(song: Song) {
         bindImpl(
-            { song.cover },
+            {
+                song.cover
+                    ?: song.album.covers.covers
+                        .groupBy { it.id }
+                        .maxByOrNull { it.value.size }
+                        ?.value
+                        ?.firstOrNull()
+            },
             context.getString(R.string.desc_album_cover, song.album.name),
             R.drawable.ic_album_24,
             squareishShapeAppearance,
@@ -357,11 +364,6 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
 
     /**
      * Bind an [Album]'s image to this view.
-     *
-     * If the user has previously saved a custom cover for this album via
-     * [CoverPickerDialogFragment], that image is used instead of the library-derived artwork.
-     * Memory caching is disabled for custom covers so that a newly-saved image is always shown
-     * without stale data.
      *
      * @param album The [Album] to bind to the view.
      */
