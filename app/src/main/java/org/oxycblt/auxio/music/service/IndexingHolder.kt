@@ -25,6 +25,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.oxycblt.auxio.BuildConfig
 import org.oxycblt.auxio.ForegroundListener
@@ -177,7 +178,13 @@ private constructor(
                     MediaStore.from(workerContext, musicSettings.mediaStoreQuery)
                 LocationMode.SAF -> SAF.from(workerContext, musicSettings.safQuery)
             }
-        trackingJob = indexScope.launch { fs.track().collect { requestIndex(true) } }
+        // Debounce FS events so a multi-file write (e.g., embedding cover art into every song
+        // of an album) coalesces into a single reindex instead of cancelling and restarting
+        // the indexing job per file.
+        trackingJob =
+            indexScope.launch {
+                fs.track().debounce(FS_TRACK_DEBOUNCE_MS).collect { requestIndex(true) }
+            }
     }
 
     private fun stopTracking() {
@@ -231,5 +238,6 @@ private constructor(
 
     companion object {
         const val WAKELOCK_TIMEOUT_MS = 60 * 1000L
+        const val FS_TRACK_DEBOUNCE_MS = 1500L
     }
 }

@@ -571,7 +571,11 @@ constructor(
         songHeader: (Int) -> PlainHeader = { SortHeader(it) },
     ) {
         if (detail == null) {
+            // The parent has been removed from the library (e.g., a tag edit moved every song
+            // to a different album). Clear the stale song list too so a tap on a leftover row
+            // during the brief window before navigateUp can't dereference removed music.
             parent.value = null
+            list.value = emptyList()
             return
         }
         val newList = mutableListOf<Item>()
