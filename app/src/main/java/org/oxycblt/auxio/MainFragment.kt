@@ -437,6 +437,7 @@ class MainFragment :
         val binding = requireBinding()
         val progress = binding.indexingProgress
         val container = binding.indexingProgressContainer
+        val ctx = container.context
         when (state) {
             is IndexingState.Completed -> {
                 if (state.error == null) {
@@ -451,7 +452,7 @@ class MainFragment :
                         homeModel.currentTabType.value,
                     )
                 } else {
-                    val errorColor = container.context.getAttrColorCompat(MR.attr.colorError)
+                    val errorColor = ctx.getAttrColorCompat(androidx.appcompat.R.attr.colorError)
                     progress.isIndeterminate = false
                     progress.max = 1
                     progress.progress = 1
@@ -473,7 +474,7 @@ class MainFragment :
                 }
             }
             is IndexingState.Indexing -> {
-                val primaryColor = container.context.getAttrColorCompat(MR.attr.colorPrimary)
+                val primaryColor = ctx.getAttrColorCompat(androidx.appcompat.R.attr.colorPrimary)
                 progress.setIndicatorColor(primaryColor.defaultColor)
                 when (val p = state.progress) {
                     is IndexingProgress.Songs -> {
@@ -488,7 +489,7 @@ class MainFragment :
                 container.setOnClickListener(null)
             }
             null -> {
-                val primaryColor = container.context.getAttrColorCompat(MR.attr.colorPrimary)
+                val primaryColor = ctx.getAttrColorCompat(androidx.appcompat.R.attr.colorPrimary)
                 progress.setIndicatorColor(primaryColor.defaultColor)
                 progress.isIndeterminate = true
                 progress.show()

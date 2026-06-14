@@ -136,4 +136,23 @@
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
+    <FrameLayout
+        android:id="@+id/indexing_progress_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:elevation="8dp">
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/indexing_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            app:hideAnimationBehavior="escape"
+            app:showAnimationBehavior="outward"
+            app:trackCornerRadius="0dp"
+            app:trackThickness="4dp" />
+
+    </FrameLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
