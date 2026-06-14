@@ -54,7 +54,6 @@ import org.oxycblt.auxio.home.tabs.Tab
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.SelectionFragment
 import org.oxycblt.auxio.list.menu.Menu
-import org.oxycblt.auxio.music.IndexingState
 import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.PlaylistDecision
@@ -67,7 +66,6 @@ import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.lazyReflectedField
 import org.oxycblt.auxio.util.navigateSafe
 import org.oxycblt.auxio.util.showToast
-import org.oxycblt.musikr.IndexingProgress
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.playlist.m3u.M3U
@@ -146,9 +144,8 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 }
             )
 
-            // ViewPager2 will nominally consume window insets, which will then break the window
-            // insets applied to the indexing view before API 30. Fix this by overriding the
-            // listener with a non-consuming listener.
+            // ViewPager2 nominally consumes window insets, which can break inset propagation
+            // to sibling views on pre-API 30. Override with a non-consuming listener.
             setOnApplyWindowInsetsListener { _, insets -> insets }
 
             // We know that there will only be a fixed amount of tabs, so we manually set this
@@ -178,7 +175,6 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
         collect(detailModel.toShow.flow, ::handleShow)
         collect(listModel.menu.flow, ::handleMenu)
         collectImmediately(listModel.selected, listModel.selectionMode, ::updateSelection)
-        collectImmediately(musicModel.indexingState, ::updateIndexerState)
         collect(musicModel.playlistDecision.flow, ::handlePlaylistDecision)
         collectImmediately(musicModel.playlistMessage.flow, ::handlePlaylistMessage)
         collect(playbackModel.playbackDecision.flow, ::handlePlaybackDecision)
@@ -300,51 +296,6 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
         }
         findNavController().navigateSafe(HomeFragmentDirections.chooseLocations())
         homeModel.chooseMusicLocations.consume()
-    }
-
-    private fun updateIndexerState(state: IndexingState?) {
-        val binding = requireBinding()
-        when (state) {
-            is IndexingState.Completed -> {
-                binding.homeIndexingContainer.isInvisible = state.error == null
-                binding.homeIndexingProgress.isInvisible = state.error != null
-                binding.homeIndexingError.isInvisible = state.error == null
-                if (state.error != null) {
-                    binding.homeIndexingContainer.setOnClickListener {
-                        findNavController()
-                            .navigateSafe(HomeFragmentDirections.reportError(state.error))
-                    }
-                } else {
-                    binding.homeIndexingContainer.setOnClickListener(null)
-                }
-            }
-            is IndexingState.Indexing -> {
-                binding.homeIndexingContainer.isInvisible = false
-                binding.homeIndexingProgress.apply {
-                    isInvisible = false
-                    when (state.progress) {
-                        is IndexingProgress.Songs -> {
-                            isIndeterminate = false
-                            progress = state.progress.loaded
-                            max = state.progress.explored
-                        }
-                        is IndexingProgress.Indeterminate -> {
-                            isIndeterminate = true
-                        }
-                    }
-                }
-                binding.homeIndexingError.isInvisible = true
-            }
-            null -> {
-                binding.homeIndexingContainer.isInvisible = false
-                binding.homeIndexingProgress.apply {
-                    isInvisible = false
-                    isIndeterminate = true
-                }
-                binding.homeIndexingError.isInvisible = true
-                binding.homeIndexingContainer.setOnClickListener(null)
-            }
-        }
     }
 
     private fun handlePlaylistDecision(decision: PlaylistDecision?) {

@@ -24,9 +24,12 @@ import android.view.ViewTreeObserver
 import android.view.WindowInsets
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -68,6 +71,7 @@ import org.oxycblt.auxio.util.getDimen
 import org.oxycblt.auxio.util.lazyReflectedMethod
 import org.oxycblt.auxio.util.navigateSafe
 import org.oxycblt.auxio.util.unlikelyToBeNull
+import org.oxycblt.musikr.IndexingProgress
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Song
 import timber.log.Timber as L
@@ -143,6 +147,14 @@ class MainFragment :
             lastInsets = insets
             insets
         }
+
+        // Pad the global indexing progress bar so it sits just below the status bar
+        // and stays anchored above every child fragment's toolbar.
+        ViewCompat.setOnApplyWindowInsetsListener(binding.indexingProgressContainer) { v, insets ->
+            v.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.indexingProgressContainer)
 
         // Send meaningful accessibility events for bottom sheets
         ViewCompat.setAccessibilityPaneTitle(
@@ -422,15 +434,67 @@ class MainFragment :
     }
 
     private fun updateIndexerState(state: IndexingState?) {
-        if (state is IndexingState.Completed && state.error == null) {
-            L.d("Received ok response")
-            val binding = requireBinding()
-            updateFabVisibility(
-                binding,
-                homeModel.songList.value,
-                homeModel.isFastScrolling.value,
-                homeModel.currentTabType.value,
-            )
+        val binding = requireBinding()
+        val progress = binding.indexingProgress
+        val container = binding.indexingProgressContainer
+        when (state) {
+            is IndexingState.Completed -> {
+                if (state.error == null) {
+                    L.d("Received ok response")
+                    progress.hide()
+                    container.isClickable = false
+                    container.setOnClickListener(null)
+                    updateFabVisibility(
+                        binding,
+                        homeModel.songList.value,
+                        homeModel.isFastScrolling.value,
+                        homeModel.currentTabType.value,
+                    )
+                } else {
+                    val errorColor = container.context.getAttrColorCompat(MR.attr.colorError)
+                    progress.isIndeterminate = false
+                    progress.max = 1
+                    progress.progress = 1
+                    progress.setIndicatorColor(errorColor.defaultColor)
+                    progress.show()
+                    container.isClickable = true
+                    container.setOnClickListener {
+                        try {
+                            binding.exploreNavHost
+                                .findNavController()
+                                .navigate(
+                                    R.id.error_details_dialog,
+                                    bundleOf("error" to state.error),
+                                )
+                        } catch (e: IllegalArgumentException) {
+                            L.e("Could not navigate to error dialog: ${e.message}")
+                        }
+                    }
+                }
+            }
+            is IndexingState.Indexing -> {
+                val primaryColor = container.context.getAttrColorCompat(MR.attr.colorPrimary)
+                progress.setIndicatorColor(primaryColor.defaultColor)
+                when (val p = state.progress) {
+                    is IndexingProgress.Songs -> {
+                        progress.isIndeterminate = false
+                        progress.max = p.explored.coerceAtLeast(1)
+                        progress.progress = p.loaded
+                    }
+                    is IndexingProgress.Indeterminate -> progress.isIndeterminate = true
+                }
+                progress.show()
+                container.isClickable = false
+                container.setOnClickListener(null)
+            }
+            null -> {
+                val primaryColor = container.context.getAttrColorCompat(MR.attr.colorPrimary)
+                progress.setIndicatorColor(primaryColor.defaultColor)
+                progress.isIndeterminate = true
+                progress.show()
+                container.isClickable = false
+                container.setOnClickListener(null)
+            }
         }
     }
 
