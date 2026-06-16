@@ -51,7 +51,7 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
             if (result.resultCode == Activity.RESULT_OK) {
                 L.d("Delete permission granted, song deleted by system")
                 requireContext().showToast(R.string.lng_song_deleted)
-                findNavController().navigateUp()
+                dismissToMenu()
                 musicModel.refresh()
             } else {
                 requireContext().showToast(R.string.lng_song_delete_failed)
@@ -79,6 +79,13 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
             getString(R.string.fmt_deletion_info, song.path.name ?: song.name.raw)
     }
 
+    private fun dismissToMenu() {
+        val nav = findNavController()
+        if (!nav.popBackStack(R.id.song_menu_dialog, true)) {
+            nav.navigateUp()
+        }
+    }
+
     private fun deleteSong() {
         val song = musicRepository.library?.findSong(args.songUid)
         if (song == null) {
@@ -95,7 +102,7 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
                 if (rows > 0) {
                     L.d("Deleted song file: ${song.path.name}")
                     requireContext().showToast(R.string.lng_song_deleted)
-                    findNavController().navigateUp()
+                    dismissToMenu()
                     musicModel.refresh()
                 } else {
                     L.e("Failed to delete song file: ${song.path.name}")

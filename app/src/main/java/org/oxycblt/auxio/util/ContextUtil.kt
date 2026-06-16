@@ -190,7 +190,7 @@ fun <T : Any> Context.getSystemServiceCompat(serviceClass: KClass<T>) =
  * @param stringRes The resource to the string to use in the toast.
  */
 fun Context.showToast(@StringRes stringRes: Int) {
-    Toast.makeText(applicationContext, getString(stringRes), Toast.LENGTH_SHORT).show()
+    Toast.makeText(applicationContext, getText(stringRes), Toast.LENGTH_SHORT).show()
 }
 
 /** Create a [PendingIntent] that will launch the app activity when launched. */
