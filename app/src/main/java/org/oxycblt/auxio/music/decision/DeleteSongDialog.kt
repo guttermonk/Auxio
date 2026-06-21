@@ -101,7 +101,7 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
         }
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             pendingDelete = true
-            // Hide rather than dismiss so the fragment stays alive for the activity-result callback.
+            // Hide to keep the fragment alive for the activity-result callback.
             dialog.hide()
             deleteSong()
         }
