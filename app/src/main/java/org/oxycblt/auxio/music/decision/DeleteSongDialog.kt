@@ -47,13 +47,8 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
 
     @Inject lateinit var musicRepository: MusicRepository
 
-    // The launcher is registered on this fragment, so the fragment must stay alive until the
-    // system delete result returns. AlertDialog auto-dismisses on positive button click, which
-    // would tear down the fragment and silently drop the result, so onStart rebinds the positive
-    // button to a handler that hides the dialog without dismissing it.
     private val deletePermLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-            L.d("Delete permission result: ${result.resultCode}")
             pendingDelete = false
             if (result.resultCode == Activity.RESULT_OK) {
                 L.d("Delete permission granted, song deleted by system")
@@ -106,6 +101,7 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
         }
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             pendingDelete = true
+            // Hide rather than dismiss so the fragment stays alive for the activity-result callback.
             dialog.hide()
             deleteSong()
         }
