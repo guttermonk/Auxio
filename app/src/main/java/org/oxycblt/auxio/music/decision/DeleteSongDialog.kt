@@ -48,14 +48,16 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
 
     private val deletePermLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            L.d("Delete permission result: ${result.resultCode}")
             if (result.resultCode == Activity.RESULT_OK) {
                 L.d("Delete permission granted, song deleted by system")
                 requireContext().showToast(R.string.lng_song_deleted)
-                dismissToMenu()
                 musicModel.refresh()
             } else {
+                L.w("Delete permission denied or cancelled (resultCode=${result.resultCode})")
                 requireContext().showToast(R.string.lng_song_delete_failed)
             }
+            dismissToMenu()
         }
 
     override fun onConfigDialog(builder: AlertDialog.Builder) {
@@ -93,24 +95,35 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val request =
-                MediaStore.createDeleteRequest(requireContext().contentResolver, listOf(song.uri))
-            deletePermLauncher.launch(IntentSenderRequest.Builder(request).build())
+            try {
+                L.d("Launching system delete request: ${song.path.name}")
+                val request =
+                    MediaStore.createDeleteRequest(
+                        requireContext().contentResolver,
+                        listOf(song.uri),
+                    )
+                deletePermLauncher.launch(IntentSenderRequest.Builder(request).build())
+            } catch (e: Exception) {
+                L.e(e, "Failed to launch system delete request: ${song.path.name}")
+                requireContext().showToast(R.string.lng_song_delete_failed)
+                dismissToMenu()
+            }
         } else {
             try {
                 val rows = requireContext().contentResolver.delete(song.uri, null, null)
                 if (rows > 0) {
                     L.d("Deleted song file: ${song.path.name}")
                     requireContext().showToast(R.string.lng_song_deleted)
-                    dismissToMenu()
                     musicModel.refresh()
                 } else {
                     L.e("Failed to delete song file: ${song.path.name}")
                     requireContext().showToast(R.string.lng_song_delete_failed)
                 }
+                dismissToMenu()
             } catch (e: Exception) {
                 L.e(e, "Failed to delete song file: ${song.path.name}")
                 requireContext().showToast(R.string.lng_song_delete_failed)
+                dismissToMenu()
             }
         }
     }
