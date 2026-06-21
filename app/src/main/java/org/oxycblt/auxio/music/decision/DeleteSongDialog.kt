@@ -43,27 +43,44 @@ import timber.log.Timber as L
 class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBinding>() {
     private val musicModel: MusicViewModel by activityViewModels()
     private val args: DeleteSongDialogArgs by navArgs()
+    private var pendingDelete = false
 
     @Inject lateinit var musicRepository: MusicRepository
 
+    // The launcher is registered on this fragment, so the fragment must stay alive until the
+    // system delete result returns. AlertDialog auto-dismisses on positive button click, which
+    // would tear down the fragment and silently drop the result, so onStart rebinds the positive
+    // button to a handler that hides the dialog without dismissing it.
     private val deletePermLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
             L.d("Delete permission result: ${result.resultCode}")
+            pendingDelete = false
             if (result.resultCode == Activity.RESULT_OK) {
                 L.d("Delete permission granted, song deleted by system")
                 requireContext().showToast(R.string.lng_song_deleted)
+                dismissToMenu()
                 musicModel.refresh()
             } else {
                 L.w("Delete permission denied or cancelled (resultCode=${result.resultCode})")
                 requireContext().showToast(R.string.lng_song_delete_failed)
+                dismissToMenu()
             }
-            dismissToMenu()
         }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        pendingDelete = savedInstanceState?.getBoolean(KEY_PENDING, false) ?: false
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_PENDING, pendingDelete)
+    }
 
     override fun onConfigDialog(builder: AlertDialog.Builder) {
         builder
             .setTitle(R.string.lbl_confirm_delete_song)
-            .setPositiveButton(R.string.lbl_delete) { _, _ -> deleteSong() }
+            .setPositiveButton(R.string.lbl_delete, null)
             .setNegativeButton(R.string.lbl_cancel, null)
     }
 
@@ -79,6 +96,19 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
         }
         binding.deletionInfo.text =
             getString(R.string.fmt_deletion_info, song.path.name ?: song.name.raw)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val dialog = requireDialog() as AlertDialog
+        if (pendingDelete) {
+            dialog.hide()
+        }
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            pendingDelete = true
+            dialog.hide()
+            deleteSong()
+        }
     }
 
     private fun dismissToMenu() {
@@ -105,6 +135,7 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
                 deletePermLauncher.launch(IntentSenderRequest.Builder(request).build())
             } catch (e: Exception) {
                 L.e(e, "Failed to launch system delete request: ${song.path.name}")
+                pendingDelete = false
                 requireContext().showToast(R.string.lng_song_delete_failed)
                 dismissToMenu()
             }
@@ -119,12 +150,18 @@ class DeleteSongDialog : ViewBindingMaterialDialogFragment<DialogDeleteSongBindi
                     L.e("Failed to delete song file: ${song.path.name}")
                     requireContext().showToast(R.string.lng_song_delete_failed)
                 }
+                pendingDelete = false
                 dismissToMenu()
             } catch (e: Exception) {
                 L.e(e, "Failed to delete song file: ${song.path.name}")
+                pendingDelete = false
                 requireContext().showToast(R.string.lng_song_delete_failed)
                 dismissToMenu()
             }
         }
+    }
+
+    private companion object {
+        const val KEY_PENDING = "pending_delete"
     }
 }

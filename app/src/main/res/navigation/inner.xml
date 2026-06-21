@@ -562,7 +562,9 @@
             app:destination="@id/tag_editor_dialog" />
         <action
             android:id="@+id/delete_song"
-            app:destination="@id/delete_song_dialog" />
+            app:destination="@id/delete_song_dialog"
+            app:popUpTo="@id/song_menu_dialog"
+            app:popUpToInclusive="true" />
     </dialog>
 
     <dialog
