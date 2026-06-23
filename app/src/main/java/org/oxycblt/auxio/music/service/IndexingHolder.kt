@@ -25,6 +25,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.oxycblt.auxio.BuildConfig
@@ -133,11 +134,14 @@ private constructor(
 
     override fun requestIndex(withCache: Boolean) {
         L.d("Starting new indexing job (previous=${currentIndexJob?.hashCode()})")
-        // Cancel the previous music loading job.
-        currentIndexJob?.cancel()
-        // Start a new music loading job on a co-routine.
-        currentIndexJob =
-            indexScope.launch { musicRepository.index(this@IndexingHolder, withCache) }
+        val previous = currentIndexJob
+        // Wait for any in-flight index to finish cancellation/cleanup before starting a
+        // new one. Previously two indexers could briefly overlap during cover-storage
+        // cleanup, causing crashes on consecutive edits.
+        currentIndexJob = indexScope.launch {
+            previous?.cancelAndJoin()
+            musicRepository.index(this@IndexingHolder, withCache)
+        }
     }
 
     override fun onIndexingStateChanged() {
@@ -238,6 +242,6 @@ private constructor(
 
     companion object {
         const val WAKELOCK_TIMEOUT_MS = 60 * 1000L
-        const val FS_TRACK_DEBOUNCE_MS = 1500L
+        const val FS_TRACK_DEBOUNCE_MS = 250L
     }
 }
