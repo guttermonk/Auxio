@@ -138,10 +138,11 @@ private constructor(
         // Wait for any in-flight index to finish cancellation/cleanup before starting a
         // new one. Previously two indexers could briefly overlap during cover-storage
         // cleanup, causing crashes on consecutive edits.
-        currentIndexJob = indexScope.launch {
-            previous?.cancelAndJoin()
-            musicRepository.index(this@IndexingHolder, withCache)
-        }
+        currentIndexJob =
+            indexScope.launch {
+                previous?.cancelAndJoin()
+                musicRepository.index(this@IndexingHolder, withCache)
+            }
     }
 
     override fun onIndexingStateChanged() {
