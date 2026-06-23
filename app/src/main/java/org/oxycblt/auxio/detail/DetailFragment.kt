@@ -22,7 +22,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.core.view.isInvisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
@@ -37,13 +36,10 @@ import org.oxycblt.auxio.databinding.FragmentDetailBinding
 import org.oxycblt.auxio.detail.list.DetailListAdapter
 import org.oxycblt.auxio.list.ListFragment
 import org.oxycblt.auxio.list.ListViewModel
-import org.oxycblt.auxio.music.IndexingState
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
-import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.getDimenPixels
 import org.oxycblt.auxio.util.systemBarInsetsCompat
-import org.oxycblt.musikr.IndexingProgress
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 
@@ -119,8 +115,6 @@ abstract class DetailFragment<P : MusicParent, C : Music> :
         binding.detailRecycler.apply { adapter = getDetailListAdapter() }
 
         spacingSmall = requireContext().getDimenPixels(R.dimen.spacing_small)
-
-        collectImmediately(musicModel.indexingState, ::updateIndexerState)
     }
 
     override fun onDestroyBinding(binding: FragmentDetailBinding) {
@@ -226,31 +220,6 @@ abstract class DetailFragment<P : MusicParent, C : Music> :
     protected abstract fun onShuffleParent(parent: P)
 
     abstract fun onOpenParentMenu()
-
-    private fun updateIndexerState(state: IndexingState?) {
-        val binding = requireBinding()
-        when (state) {
-            is IndexingState.Indexing -> {
-                binding.detailIndexingContainer.isInvisible = false
-                binding.detailIndexingProgress.apply {
-                    isInvisible = false
-                    when (state.progress) {
-                        is IndexingProgress.Songs -> {
-                            isIndeterminate = false
-                            progress = state.progress.loaded
-                            max = state.progress.explored
-                        }
-                        is IndexingProgress.Indeterminate -> {
-                            isIndeterminate = true
-                        }
-                    }
-                }
-            }
-            else -> {
-                binding.detailIndexingContainer.isInvisible = true
-            }
-        }
-    }
 
     private companion object {
         const val KEY_DUAL_PANE = BuildConfig.APPLICATION_ID + ".detail.DUAL_PANE"
