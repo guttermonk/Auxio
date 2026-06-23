@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.musikr.fs.persist
 
 import android.content.Context
@@ -67,9 +67,9 @@ object PersistedFiles {
         RecordingFS(delegate, file, revision)
 
     /**
-     * Open an [FS] that replays files previously recorded to [file] under [revision]. Returns
-     * null if the file is missing, the format/version doesn't match, or the recorded revision
-     * differs from [revision] (i.e. a forced rescan happened in between).
+     * Open an [FS] that replays files previously recorded to [file] under [revision]. Returns null
+     * if the file is missing, the format/version doesn't match, or the recorded revision differs
+     * from [revision] (i.e. a forced rescan happened in between).
      */
     fun replay(context: Context, file: JFile, revision: UUID): FS? {
         if (!file.isFile) return null
