@@ -243,6 +243,6 @@ private constructor(
 
     companion object {
         const val WAKELOCK_TIMEOUT_MS = 60 * 1000L
-        const val FS_TRACK_DEBOUNCE_MS = 250L
+        const val FS_TRACK_DEBOUNCE_MS = 50L
     }
 }

@@ -20,6 +20,7 @@ package org.oxycblt.auxio.music
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File as JFile
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -44,6 +45,7 @@ import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.Storage
 import org.oxycblt.musikr.cache.MutableCache
 import org.oxycblt.musikr.fs.mediastore.MediaStore
+import org.oxycblt.musikr.fs.persist.PersistedFiles
 import org.oxycblt.musikr.fs.saf.SAF
 import org.oxycblt.musikr.playlist.db.StoredPlaylists
 import org.oxycblt.musikr.tag.interpret.Naming
@@ -406,16 +408,44 @@ constructor(
         L.d("FS: $fs")
         val storage = Storage(baseCache, covers, storedPlaylists)
         val interpretation = Interpretation(nameFactory, separators)
-        val config = Config(fs, storage, interpretation)
+        val persistedFilesPath = JFile(context.filesDir, "library_files.v1.bin")
+        // Phase 2 runs with a recording FS so the explored file list is captured for next
+        // startup's phase 0 replay.
+        val recordingFs = PersistedFiles.recording(fs, persistedFilesPath, newRevision)
+        val config = Config(recordingFs, storage, interpretation)
 
-        // Phase 1: if a prior completed scan exists, serve the library immediately from the
-        // cache — treating stale entries as hits — so the user can browse while phase 2
-        // re-extracts changed files in the background.
+        // Phase 0: if a prior persisted file list exists for the current revision, replay it
+        // to emit a library without walking the filesystem at all. Skips the slow FS walk
+        // that phase 1 would otherwise do; tag data still comes from the cache (stale-as-hit).
+        var phase0Ran = false
         if (withCache && currentRevision != null) {
+            val replayFs = PersistedFiles.replay(context, persistedFilesPath, currentRevision)
+            if (replayFs != null) {
+                L.d("Phase 0: instant library from persisted file list")
+                val phase0Start = System.currentTimeMillis()
+                val phase0Config =
+                    config.copy(
+                        fs = replayFs,
+                        storage = storage.copy(cache = StaleAsHitCache(baseCache)),
+                    )
+                val phase0Result = Musikr.new(context, phase0Config).run()
+                L.d("Phase 0 finished in ${System.currentTimeMillis() - phase0Start}ms")
+                emitLibrary(phase0Result.library)
+                phase0Ran = true
+            }
+        }
+
+        // Phase 1: only runs when phase 0 wasn't available. Walks real FS but serves cache
+        // (stale-as-hit) for tag data, so the user can browse while phase 2 re-extracts
+        // changed files in the background.
+        if (!phase0Ran && withCache && currentRevision != null) {
             L.d("Phase 1: instant library load from cache")
             val phase1Start = System.currentTimeMillis()
             val phase1Config =
-                config.copy(storage = storage.copy(cache = StaleAsHitCache(baseCache)))
+                config.copy(
+                    fs = fs,
+                    storage = storage.copy(cache = StaleAsHitCache(baseCache)),
+                )
             val phase1Result = Musikr.new(context, phase1Config).run()
             L.d("Phase 1 finished in ${System.currentTimeMillis() - phase1Start}ms")
             emitLibrary(phase1Result.library)
@@ -424,6 +454,7 @@ constructor(
 
         // Phase 2 (or sole run on first install / forced rescan): full extraction via TagLib
         // for any stale or new files. Emits progress so the UI can show a loading indicator.
+        // Uses the recording FS so the file list is persisted on success.
         L.d("Phase 2: full index")
         val start = System.currentTimeMillis()
         val result = Musikr.new(context, config).run(::emitIndexingProgress)
