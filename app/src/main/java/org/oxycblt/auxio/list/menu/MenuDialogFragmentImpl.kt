@@ -211,6 +211,7 @@ class ArtistMenuDialogFragment : MenuDialogFragment<Menu.ForArtist>() {
                 R.id.action_play_next,
                 R.id.action_queue_add,
                 R.id.action_playlist_add,
+                R.id.action_edit_tags,
                 R.id.action_share,
             )
         } else {
@@ -238,6 +239,16 @@ class ArtistMenuDialogFragment : MenuDialogFragment<Menu.ForArtist>() {
             )
     }
 
+    override fun interceptClick(item: MenuItem): Boolean {
+        val artist = (menuModel.currentMenu.value as? Menu.ForArtist)?.artist ?: return false
+        if (item.itemId == R.id.action_edit_tags) {
+            val uids = artist.songs.map { it.uid }.toTypedArray()
+            findNavController().navigate(ArtistMenuDialogFragmentDirections.editTagsBulk(uids))
+            return true
+        }
+        return false
+    }
+
     override fun onClick(item: MenuItem, menu: Menu.ForArtist) {
         when (item.itemId) {
             R.id.action_play -> playbackModel.play(menu.artist)
@@ -253,6 +264,9 @@ class ArtistMenuDialogFragment : MenuDialogFragment<Menu.ForArtist>() {
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.artist)
             R.id.action_share -> requireContext().share(menu.artist)
+            R.id.action_edit_tags -> {
+                /* handled by interceptClick */
+            }
             else -> error("Unexpected menu item $item")
         }
     }
@@ -275,7 +289,22 @@ class GenreMenuDialogFragment : MenuDialogFragment<Menu.ForGenre>() {
     override val parcel
         get() = args.parcel
 
-    override fun getDisabledItemIds(menu: Menu.ForGenre) = setOf<Int>()
+    override fun getDisabledItemIds(menu: Menu.ForGenre) =
+        if (menu.genre.songs.isEmpty()) {
+            setOf(R.id.action_edit_tags)
+        } else {
+            setOf()
+        }
+
+    override fun interceptClick(item: MenuItem): Boolean {
+        val genre = (menuModel.currentMenu.value as? Menu.ForGenre)?.genre ?: return false
+        if (item.itemId == R.id.action_edit_tags) {
+            val uids = genre.songs.map { it.uid }.toTypedArray()
+            findNavController().navigate(GenreMenuDialogFragmentDirections.editTagsBulk(uids))
+            return true
+        }
+        return false
+    }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForGenre) {
         val context = requireContext()
@@ -305,6 +334,9 @@ class GenreMenuDialogFragment : MenuDialogFragment<Menu.ForGenre>() {
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.genre)
             R.id.action_share -> requireContext().share(menu.genre)
+            R.id.action_edit_tags -> {
+                /* handled by interceptClick */
+            }
             else -> error("Unexpected menu item $item")
         }
     }

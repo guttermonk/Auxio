@@ -603,6 +603,9 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForArtist$Parcel" />
+        <action
+            android:id="@+id/edit_tags_bulk"
+            app:destination="@id/bulk_tag_editor_dialog" />
     </dialog>
 
     <dialog
@@ -613,6 +616,9 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForGenre$Parcel" />
+        <action
+            android:id="@+id/edit_tags_bulk"
+            app:destination="@id/bulk_tag_editor_dialog" />
     </dialog>
 
     <dialog
